@@ -1,0 +1,110 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Water Quality History{% endblock %}
+{% block page_title %}Water Quality History{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <h1>📋 Water Quality History</h1>
+    <p>Full log of all water quality readings across your farms.</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="{{ url_for('water_quality.export_csv', farm_id=selected_farm.id if selected_farm else '') }}" class="btn btn-outline btn-sm">📥 Export CSV</a>
+    <a href="{{ url_for('water_quality.alerts') }}" class="btn btn-outline btn-sm">🔔 View Alerts</a>
+  </div>
+</div>
+
+<!-- Farm Selector -->
+{% if farms | length > 1 %}
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-body" style="padding:16px 20px;">
+    <form method="GET" action="{{ url_for('water_quality.history') }}" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <label class="form-label" style="margin:0;white-space:nowrap;">🐠 Farm:</label>
+      <select name="farm_id" class="form-control form-select" style="max-width:300px;" onchange="this.form.submit()">
+        {% for f in farms %}
+        <option value="{{ f.id }}" {% if selected_farm and f.id == selected_farm.id %}selected{% endif %}>{{ f.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- Logs Table -->
+<div class="card">
+  <div class="card-header">
+    <h3>{{ selected_farm.name if selected_farm else 'All Farms' }} — {{ logs | length }} Records</h3>
+    <a href="{{ url_for('water_quality.index') }}" class="btn btn-primary btn-sm">+ Log Reading</a>
+  </div>
+  <div class="card-body" style="padding:0;">
+    {% if logs %}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>pH</th>
+            <th>Temp °C</th>
+            <th>DO mg/L</th>
+            <th>Ammonia</th>
+            <th>Salinity</th>
+            <th>Status</th>
+            <th>Alerts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td style="font-size:0.82rem;white-space:nowrap;">{{ log.recorded_at[:16].replace('T',' ') }}</td>
+            <td>
+              <span style="font-weight:{% if 6.5 <= log.ph <= 8.5 %}600{% else %}700{% endif %};
+                           color:{% if 6.5 <= log.ph <= 8.5 %}var(--success){% elif 5 <= log.ph <= 9.5 %}var(--warning){% else %}var(--danger){% endif %};">
+                {{ log.ph }}
+              </span>
+            </td>
+            <td>{{ log.temperature }}°</td>
+            <td>
+              <span style="font-weight:700;color:{% if log.dissolved_oxygen >= 5 %}var(--success){% elif log.dissolved_oxygen >= 3 %}var(--warning){% else %}var(--danger){% endif %};">
+                {{ log.dissolved_oxygen }}
+              </span>
+            </td>
+            <td>{{ log.ammonia }}</td>
+            <td>{{ log.salinity }}</td>
+            <td>
+              <span class="badge badge-{{ log.health_status }}">
+                {{ '✅' if log.health_status == 'good' else '⚠️' if log.health_status == 'warning' else '🚨' }}
+                {{ log.health_status | title }}
+              </span>
+            </td>
+            <td style="font-size:0.78rem;color:var(--text-muted);max-width:180px;">
+              {% if log.alerts %}
+                {% for a in log.alerts[:1] %}{{ a }}{% endfor %}
+                {% if log.alerts | length > 1 %}<span style="color:var(--warning);"> +{{ log.alerts | length - 1 }} more</span>{% endif %}
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-top:1px solid var(--border);">
+      {% if page > 1 %}
+      <a href="{{ url_for('water_quality.history', farm_id=selected_farm.id if selected_farm else '', page=page-1) }}" class="btn btn-outline btn-sm">← Prev</a>
+      {% endif %}
+      <span style="font-size:0.85rem;color:var(--text-secondary);">Page {{ page }} of {{ total_pages }}</span>
+      {% if page < total_pages %}
+      <a href="{{ url_for('water_quality.history', farm_id=selected_farm.id if selected_farm else '', page=page+1) }}" class="btn btn-outline btn-sm">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="no-data"><div class="icon">🌊</div><p>No readings logged yet.</p><a href="{{ url_for('water_quality.index') }}" class="btn btn-primary btn-sm" style="margin-top:8px;">Log First Reading</a></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <h1>👥 User Management</h1>
+    <p>Manage all registered users — view, role-change, or ban/unban.</p>
+  </div>
+  <a href="{{ url_for('admin.index') }}" class="btn btn-outline btn-sm">← Admin Home</a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-6">
+  <div class="card-body" style="padding:16px 20px;">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div>
+        <label class="form-label" style="margin-bottom:4px;">Search</label>
+        <input type="text" name="q" class="form-control" placeholder="Name or email..." value="{{ query or '' }}" style="min-width:220px;" />
+      </div>
+      <div>
+        <label class="form-label" style="margin-bottom:4px;">Role</label>
+        <select name="role" class="form-control form-select">
+          <option value="">All Roles</option>
+          <option value="farmer" {% if role_filter == 'farmer' %}selected{% endif %}>Farmer</option>
+          <option value="expert" {% if role_filter == 'expert' %}selected{% endif %}>Expert</option>
+          <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">🔍 Filter</button>
+      <a href="{{ url_for('admin.users') }}" class="btn btn-outline">Clear</a>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>{{ users | length }} User{{ 's' if users | length != 1 }}</h3>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>User</th><th>Role</th><th>Farms</th><th>Joined</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0;">{{ u.full_name[0].upper() }}</div>
+                <div>
+                  <div style="font-weight:600;font-size:0.88rem;">{{ u.full_name }}</div>
+                  <div style="font-size:0.73rem;color:var(--text-muted);">{{ u.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.change_role', user_id=u.id) }}" style="display:inline;">
+                <select name="role" class="form-control form-select" style="padding:4px 8px;font-size:0.8rem;min-width:100px;" onchange="this.form.submit()">
+                  <option value="farmer" {% if u.role == 'farmer' %}selected{% endif %}>🌾 Farmer</option>
+                  <option value="expert" {% if u.role == 'expert' %}selected{% endif %}>⭐ Expert</option>
+                  <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>🛡️ Admin</option>
+                </select>
+              </form>
+            </td>
+            <td style="font-weight:600;color:var(--primary);">{{ u.farm_count }}</td>
+            <td style="font-size:0.8rem;color:var(--text-muted);">{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <span class="badge {{ 'badge-success' if u.is_active else 'badge-danger' }}">
+                {{ '✅ Active' if u.is_active else '🚫 Banned' }}
+              </span>
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-sm {{ 'btn-danger' if u.is_active else 'btn-success' }}" style="padding:5px 12px;font-size:0.78rem;">
+                  {{ '🚫 Ban' if u.is_active else '✅ Unban' }}
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

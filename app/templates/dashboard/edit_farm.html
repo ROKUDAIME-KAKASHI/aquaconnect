@@ -1,0 +1,53 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Edit {{ farm.name }}{% endblock %}
+{% block page_title %}Edit Farm{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>✏️ Edit Farm</h1>
+  <p>Update the details for <strong>{{ farm.name }}</strong>.</p>
+</div>
+
+<div style="max-width:640px;">
+  <div class="card">
+    <div class="card-header">
+      <h3>🐠 Farm Details</h3>
+      <a href="{{ url_for('dashboard.farm_detail', farm_id=farm.id) }}" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('dashboard.edit_farm', farm_id=farm.id) }}">
+        <div class="form-group">
+          <label class="form-label">Farm Name</label>
+          <input type="text" name="name" class="form-control" value="{{ farm.name }}" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" name="location" class="form-control" value="{{ farm.location or '' }}" placeholder="e.g. Andhra Pradesh, India" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Area (hectares)</label>
+          <input type="number" name="area_hectares" class="form-control" value="{{ farm.area_hectares or '' }}" step="0.1" min="0" placeholder="e.g. 2.5" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fish Species</label>
+          <input type="text" name="fish_species" class="form-control" value="{{ farm.fish_species or '' }}" placeholder="e.g. Tilapia, Catfish, Rohu" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Water Source</label>
+          <select name="water_source" class="form-control form-select">
+            <option value="">Select water source</option>
+            {% for src in ['River', 'Canal', 'Borewell', 'Rainwater', 'Lake', 'Reservoir', 'Pond', 'Other'] %}
+            <option value="{{ src }}" {% if farm.water_source == src %}selected{% endif %}>{{ src }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+          <a href="{{ url_for('dashboard.farm_detail', farm_id=farm.id) }}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

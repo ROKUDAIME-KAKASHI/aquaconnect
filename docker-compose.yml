@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: aquaconnect_db
+    environment:
+      POSTGRES_USER: aquauser
+      POSTGRES_PASSWORD: aquapass
+      POSTGRES_DB: aquaconnect
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aquauser -d aquaconnect"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: aquaconnect_web
+    command: gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 run:app
+    environment:
+      DATABASE_URL: postgresql://aquauser:aquapass@db:5432/aquaconnect
+      SECRET_KEY: change-me-in-production-long-random-string
+      JWT_SECRET_KEY: change-me-jwt-secret-key-in-production
+      FLASK_ENV: production
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

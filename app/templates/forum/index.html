@@ -1,0 +1,63 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Community Forum{% endblock %}
+{% block page_title %}Community Forum{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Community Forum 💬</h1>
+      <p>Ask questions, share knowledge, and connect with aquaculture experts.</p>
+    </div>
+    <a href="{{ url_for('forum.new_post') }}" class="btn btn-primary">+ New Post</a>
+  </div>
+</div>
+
+<!-- Category filter -->
+<div class="filter-tabs">
+  <a href="{{ url_for('forum.index') }}" class="filter-tab {% if not active_category %}active{% endif %}">All</a>
+  {% for cat in categories %}
+  <a href="{{ url_for('forum.index', category=cat) }}"
+     class="filter-tab {% if active_category == cat %}active{% endif %}">
+    {{ cat }}
+  </a>
+  {% endfor %}
+</div>
+
+{% if posts %}
+<div style="display:flex;flex-direction:column;gap:12px;">
+  {% for post in posts %}
+  <a href="{{ url_for('forum.post_detail', post_id=post.id) }}" class="post-card">
+    <div style="display:flex;align-items:flex-start;gap:14px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;">
+        {{ post.author.full_name[0].upper() }}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+          <span class="badge badge-info">{{ post.category }}</span>
+          {% if post.author.role == 'expert' %}
+          <span class="badge badge-expert">🎓 Expert</span>
+          {% endif %}
+        </div>
+        <div class="post-title">{{ post.title }}</div>
+        <div class="post-excerpt">{{ post.content[:160] }}{% if post.content | length > 160 %}…{% endif %}</div>
+        <div class="post-meta">
+          <span>👤 {{ post.author.full_name }}</span>
+          <span>💬 {{ post.replies | length }} replies</span>
+          <span>👁 {{ post.views }} views</span>
+          <span>🕐 {{ post.created_at.strftime('%Y-%m-%d') }}</span>
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="no-data" style="margin-top:40px;">
+  <div class="icon">💬</div>
+  <p>No posts yet{% if active_category %} in {{ active_category }}{% endif %}. Be the first to ask!</p>
+  <a href="{{ url_for('forum.new_post') }}" class="btn btn-primary btn-sm" style="margin-top:12px;">+ Create First Post</a>
+</div>
+{% endif %}
+{% endblock %}

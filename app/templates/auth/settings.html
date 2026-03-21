@@ -1,0 +1,82 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>⚙️ Account Settings</h1>
+  <p>Manage your security preferences and account options.</p>
+</div>
+
+<div class="grid-2">
+  <!-- Change Password -->
+  <div class="card">
+    <div class="card-header"><h3>🔐 Change Password</h3></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('auth.change_password') }}" id="pwdForm">
+        <div class="form-group">
+          <label class="form-label">Current Password</label>
+          <input type="password" name="current_password" class="form-control" placeholder="••••••••" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input type="password" name="new_password" id="newPwd" class="form-control" placeholder="••••••••" required minlength="8" />
+          <div class="form-hint">Minimum 8 characters</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm New Password</label>
+          <input type="password" name="confirm_password" id="confPwd" class="form-control" placeholder="••••••••" required />
+        </div>
+        <div id="pwdMatchErr" style="display:none;color:var(--danger);font-size:0.8rem;margin-bottom:10px;">⚠️ New passwords do not match.</div>
+        <button type="submit" class="btn btn-primary">🔐 Update Password</button>
+      </form>
+      <script>
+        document.getElementById('pwdForm').addEventListener('submit', function(e) {
+          const n = document.getElementById('newPwd').value;
+          const c = document.getElementById('confPwd').value;
+          const err = document.getElementById('pwdMatchErr');
+          if (n !== c) { e.preventDefault(); err.style.display = 'block'; }
+          else err.style.display = 'none';
+        });
+      </script>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="card">
+      <div class="card-header"><h3>🔔 Notification Preferences</h3></div>
+      <div class="card-body">
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">Manage when AquaConnect sends you notifications.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% set prefs = [
+            ('Critical water quality alerts', 'alert_critical', True),
+            ('Warning water quality alerts', 'alert_warning', True),
+            ('Forum replies to your posts', 'forum_replies', True),
+            ('Weekly farm summary report', 'weekly_report', False),
+          ] %}
+          {% for label, name, default in prefs %}
+          <label style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px;cursor:pointer;">
+            <span style="font-size:0.875rem;color:var(--text-primary);">{{ label }}</span>
+            <input type="checkbox" name="{{ name }}" {% if default %}checked{% endif %}
+                   style="width:16px;height:16px;accent-color:var(--primary);" />
+          </label>
+          {% endfor %}
+        </div>
+        <button class="btn btn-outline" style="margin-top:16px;">💾 Save Preferences</button>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:#fecaca;">
+      <div class="card-header" style="border-color:#fecaca;"><h3 style="color:var(--danger);">⚠️ Danger Zone</h3></div>
+      <div class="card-body">
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">These actions are irreversible. Please proceed with caution.</p>
+        <form method="POST" action="{{ url_for('auth.delete_account') }}" onsubmit="return confirm('Are you absolutely sure you want to delete your account? All your farms, water logs, and financial data will be permanently erased.');">
+          <button type="submit" class="btn btn-danger">🗑️ Delete My Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

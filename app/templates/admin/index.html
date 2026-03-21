@@ -1,0 +1,109 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🛡️ Admin Dashboard</h1>
+  <p>Platform-wide overview and management controls.</p>
+</div>
+
+<!-- Stats -->
+<div class="grid-4 mb-6">
+  <div class="stat-card teal">
+    <div class="stat-icon teal">👥</div>
+    <div class="stat-label">Total Users</div>
+    <div class="stat-value teal">{{ stats.users }}</div>
+    <div class="stat-trend">+{{ stats.new_users_week }} this week</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon green">🐠</div>
+    <div class="stat-label">Total Farms</div>
+    <div class="stat-value green">{{ stats.farms }}</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon amber">🌊</div>
+    <div class="stat-label">Water Readings</div>
+    <div class="stat-value amber">{{ stats.water_logs }}</div>
+  </div>
+  <div class="stat-card teal">
+    <div class="stat-icon teal">💬</div>
+    <div class="stat-label">Forum Posts</div>
+    <div class="stat-value teal">{{ stats.posts }}</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Recent Users -->
+  <div class="card">
+    <div class="card-header">
+      <h3>👥 Recent Users</h3>
+      <a href="{{ url_for('admin.users') }}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for u in recent_users %}
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0;">{{ u.full_name[0].upper() }}</div>
+                  <div>
+                    <div style="font-size:0.85rem;font-weight:600;">{{ u.full_name }}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">{{ u.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge {{ 'badge-expert' if u.role == 'expert' else 'badge-danger' if u.role == 'admin' else 'badge-info' }}">{{ u.role }}</span></td>
+              <td style="font-size:0.8rem;color:var(--text-muted);">{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" style="display:inline;">
+                  <button type="submit" class="btn btn-sm {{ 'btn-danger' if u.is_active else 'btn-success' }}" style="padding:4px 10px;font-size:0.75rem;">
+                    {{ '🚫 Ban' if u.is_active else '✅ Unban' }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Posts -->
+  <div class="card">
+    <div class="card-header">
+      <h3>💬 Recent Forum Posts</h3>
+      <a href="{{ url_for('admin.posts') }}" class="btn btn-outline btn-sm">Moderate</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Title</th><th>Author</th><th>Category</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for post in recent_posts %}
+            <tr>
+              <td style="max-width:180px;">
+                <a href="{{ url_for('forum.post_detail', post_id=post.id) }}" style="font-size:0.85rem;font-weight:600;color:var(--primary);">{{ post.title[:40] }}{% if post.title|length > 40 %}...{% endif %}</a>
+              </td>
+              <td style="font-size:0.82rem;">{{ post.author_name }}</td>
+              <td><span class="badge badge-info" style="font-size:0.7rem;">{{ post.category }}</span></td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.delete_post', post_id=post.id) }}"
+                      onsubmit="return confirm('Delete this post?');" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-danger" style="padding:4px 10px;font-size:0.75rem;">🗑️</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

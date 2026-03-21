@@ -1,0 +1,79 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Forum Moderation{% endblock %}
+{% block page_title %}Forum Moderation{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <h1>💬 Forum Moderation</h1>
+    <p>Review and moderate all forum posts and replies.</p>
+  </div>
+  <a href="{{ url_for('admin.index') }}" class="btn btn-outline btn-sm">← Admin Home</a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-6">
+  <div class="card-body" style="padding:16px 20px;">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div>
+        <label class="form-label" style="margin-bottom:4px;">Search</label>
+        <input type="text" name="q" class="form-control" placeholder="Post title or author..." value="{{ query or '' }}" style="min-width:220px;" />
+      </div>
+      <div>
+        <label class="form-label" style="margin-bottom:4px;">Category</label>
+        <select name="category" class="form-control form-select">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+          <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">🔍 Filter</button>
+      <a href="{{ url_for('admin.posts') }}" class="btn btn-outline">Clear</a>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3>{{ posts | length }} Post{{ 's' if posts | length != 1 }}</h3></div>
+  <div class="card-body" style="padding:0;">
+    {% if posts %}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Title</th><th>Author</th><th>Category</th><th>Replies</th><th>Views</th><th>Date</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for post in posts %}
+          <tr>
+            <td style="max-width:220px;">
+              <a href="{{ url_for('forum.post_detail', post_id=post.id) }}" target="_blank" style="font-size:0.85rem;font-weight:600;color:var(--primary);">
+                {{ post.title[:45] }}{% if post.title|length > 45 %}...{% endif %}
+              </a>
+            </td>
+            <td style="font-size:0.82rem;">{{ post.author_name }}</td>
+            <td><span class="badge badge-info" style="font-size:0.7rem;">{{ post.category }}</span></td>
+            <td style="font-weight:600;">{{ post.reply_count }}</td>
+            <td style="color:var(--text-muted);">{{ post.views }}</td>
+            <td style="font-size:0.78rem;color:var(--text-muted);">{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <a href="{{ url_for('forum.post_detail', post_id=post.id) }}" target="_blank" class="btn btn-sm btn-outline" style="padding:4px 10px;font-size:0.75rem;">👁️</a>
+                <form method="POST" action="{{ url_for('admin.delete_post', post_id=post.id) }}"
+                      onsubmit="return confirm('Permanently delete this post and all its replies?');" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-danger" style="padding:4px 10px;font-size:0.75rem;">🗑️</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="no-data"><div class="icon">💬</div><p>No posts found.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

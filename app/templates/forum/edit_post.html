@@ -1,0 +1,44 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Edit Post{% endblock %}
+{% block page_title %}Edit Post{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>✏️ Edit Post</h1>
+  <p>Update your forum post.</p>
+</div>
+
+<div style="max-width:720px;">
+  <div class="card">
+    <div class="card-header">
+      <h3>💬 Post Details</h3>
+      <a href="{{ url_for('forum.post_detail', post_id=post.id) }}" class="btn btn-outline btn-sm">← Back to Post</a>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('forum.edit_post', post_id=post.id) }}">
+        <div class="form-group">
+          <label class="form-label">Post Title</label>
+          <input type="text" name="title" class="form-control" value="{{ post.title }}" required maxlength="200" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select name="category" class="form-control form-select">
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if cat == post.category %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content</label>
+          <textarea name="content" class="form-control" rows="10" required>{{ post.content }}</textarea>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+          <a href="{{ url_for('forum.post_detail', post_id=post.id) }}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

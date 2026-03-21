@@ -1,0 +1,139 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}{{ farm.name }}{% endblock %}
+{% block page_title %}{{ farm.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <h1>🐠 {{ farm.name }}</h1>
+    <p>📍 {{ farm.location or 'Location not set' }} &nbsp;•&nbsp; 🐟 {{ farm.fish_species or 'Species not set' }} &nbsp;•&nbsp; 📐 {{ farm.area_hectares or 0 }} ha</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="{{ url_for('dashboard.edit_farm', farm_id=farm.id) }}" class="btn btn-outline btn-sm">✏️ Edit Farm</a>
+    <form method="POST" action="{{ url_for('dashboard.delete_farm', farm_id=farm.id) }}"
+          onsubmit="return confirm('Delete {{ farm.name }}? This will remove all water logs and transaction records for this farm.');">
+      <button type="submit" class="btn btn-sm" style="border:1.5px solid var(--danger);color:var(--danger);">🗑️ Delete</button>
+    </form>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="grid-4 mb-6">
+  <div class="stat-card teal">
+    <div class="stat-icon teal">🌊</div>
+    <div class="stat-label">Water Readings</div>
+    <div class="stat-value teal">{{ logs | length }}</div>
+    <div class="stat-trend">Total recorded</div>
+  </div>
+  <div class="stat-card {% if latest_log %}{{ latest_log.health_status == 'good' and 'green' or latest_log.health_status == 'warning' and 'amber' or 'red' }}{% else %}green{% endif %}">
+    <div class="stat-icon {% if latest_log %}{{ latest_log.health_status == 'good' and 'green' or latest_log.health_status == 'warning' and 'amber' or 'red' }}{% else %}green{% endif %}">
+      {% if latest_log %}{{ '✅' if latest_log.health_status == 'good' else '⚠️' if latest_log.health_status == 'warning' else '🚨' }}{% else %}❓{% endif %}
+    </div>
+    <div class="stat-label">Current Status</div>
+    <div class="stat-value {% if latest_log %}{{ latest_log.health_status == 'good' and 'green' or latest_log.health_status == 'warning' and 'amber' or 'red' }}{% else %}green{% endif %}">
+      {{ latest_log.health_status | title if latest_log else 'No Data' }}
+    </div>
+    <div class="stat-trend">Latest reading status</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon amber">💰</div>
+    <div class="stat-label">Transactions</div>
+    <div class="stat-value amber">{{ tx_count }}</div>
+    <div class="stat-trend">Financial records</div>
+  </div>
+  <div class="stat-card teal">
+    <div class="stat-icon teal">📅</div>
+    <div class="stat-label">Created</div>
+    <div class="stat-value teal" style="font-size:1.2rem;">{{ farm.created_at.strftime('%b %Y') }}</div>
+    <div class="stat-trend">{{ farm.water_source or 'Water source not set' }}</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Recent Water Logs -->
+  <div class="card">
+    <div class="card-header">
+      <h3>💧 Recent Water Readings</h3>
+      <a href="{{ url_for('water_quality.index', farm_id=farm.id) }}" class="btn btn-outline btn-sm">Log Reading</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      {% if logs %}
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>pH</th>
+              <th>DO</th>
+              <th>Temp</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs[:8] %}
+            <tr>
+              <td style="font-size:0.8rem;">{{ log.recorded_at[:10] }}</td>
+              <td>{{ log.ph }}</td>
+              <td>{{ log.dissolved_oxygen }}</td>
+              <td>{{ log.temperature }}°</td>
+              <td>
+                <span class="badge badge-{{ log.health_status }}">
+                  {{ '✅' if log.health_status == 'good' else '⚠️' if log.health_status == 'warning' else '🚨' }}
+                  {{ log.health_status | title }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if logs | length > 8 %}
+      <div style="padding:14px 20px;text-align:center;border-top:1px solid var(--border);">
+        <a href="{{ url_for('water_quality.history', farm_id=farm.id) }}" class="btn btn-outline btn-sm">View All {{ logs | length }} Readings</a>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="no-data"><div class="icon">🌊</div><p>No water readings yet.</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="card">
+    <div class="card-header">
+      <h3>💰 Recent Transactions</h3>
+      <a href="{{ url_for('financial.index', farm_id=farm.id) }}" class="btn btn-outline btn-sm">Add Transaction</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      {% if transactions %}
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Category</th><th>Type</th><th>Amount</th></tr>
+          </thead>
+          <tbody>
+            {% for tx in transactions[:8] %}
+            <tr>
+              <td style="font-size:0.8rem;">{{ tx.date }}</td>
+              <td style="font-size:0.82rem;">{{ tx.category or '—' }}</td>
+              <td>
+                <span class="badge {{ 'badge-success' if tx.type == 'income' else 'badge-danger' }}">
+                  {{ '📈' if tx.type == 'income' else '📉' }} {{ tx.type | title }}
+                </span>
+              </td>
+              <td style="font-weight:700;color:{{ '#10b981' if tx.type == 'income' else '#ef4444' }};">
+                {{ '+' if tx.type == 'income' else '-' }}₹{{ '{:,.0f}'.format(tx.amount) }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="no-data"><div class="icon">💰</div><p>No transactions yet.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

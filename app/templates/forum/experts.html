@@ -1,0 +1,56 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Expert Directory{% endblock %}
+{% block page_title %}Expert Directory{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>⭐ Expert Directory</h1>
+  <p>Connect with verified aquaculture specialists and advisors in our community.</p>
+</div>
+
+<div style="margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+  <span style="font-size:0.9rem;color:var(--text-secondary);">{{ experts | length }} verified expert{{ 's' if experts | length != 1 }}</span>
+  <a href="{{ url_for('forum.index') }}" class="btn btn-outline btn-sm">← Back to Forum</a>
+</div>
+
+{% if experts %}
+<div class="grid-3">
+  {% for expert in experts %}
+  <div class="card" style="padding:0;">
+    <div class="card-body" style="text-align:center;padding:32px 24px;">
+      <div style="width:70px;height:70px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;color:#fff;margin:0 auto 16px;">
+        {{ expert.full_name[0].upper() }}
+      </div>
+      <div style="font-size:1.05rem;font-weight:800;color:var(--text-primary);margin-bottom:4px;">{{ expert.full_name }}</div>
+      <span class="badge badge-expert" style="margin-bottom:16px;">⭐ Verified Expert</span>
+      <div style="display:flex;justify-content:center;gap:20px;margin-top:12px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="text-align:center;">
+          <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">{{ expert.post_count }}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">Posts</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.2rem;font-weight:800;color:var(--success);">{{ expert.reply_count }}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">Answers</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.2rem;font-weight:800;color:var(--warning);">{{ expert.expert_answers }}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">Expert Replies</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer" style="text-align:center;">
+      <a href="{{ url_for('forum.index') }}?author={{ expert.id }}" class="btn btn-outline btn-sm">View Posts</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="no-data" style="padding:60px;">
+    <div class="icon">⭐</div>
+    <p>No experts registered yet. Experts are verified users who provide professional advice.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

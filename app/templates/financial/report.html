@@ -1,0 +1,122 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Financial Report{% endblock %}
+{% block page_title %}Financial Report{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+  <div>
+    <h1>📑 Financial Report</h1>
+    <p>Income and expense breakdown for your farm operations.</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="{{ url_for('financial.export_csv', farm_id=selected_farm.id if selected_farm else '') }}" class="btn btn-outline btn-sm">📥 Export CSV</a>
+    <a href="{{ url_for('financial.index') }}" class="btn btn-outline btn-sm">← Back to Finance</a>
+  </div>
+</div>
+
+<!-- Farm / Period Filter -->
+<div class="card mb-6">
+  <div class="card-body" style="padding:16px 20px;">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      {% if farms | length > 1 %}
+      <div>
+        <label class="form-label" style="margin-bottom:4px;">Farm</label>
+        <select name="farm_id" class="form-control form-select" style="min-width:200px;" onchange="this.form.submit()">
+          {% for f in farms %}
+          <option value="{{ f.id }}" {% if selected_farm and f.id == selected_farm.id %}selected{% endif %}>{{ f.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div>
+        <label class="form-label" style="margin-bottom:4px;">Year</label>
+        <select name="year" class="form-control form-select" onchange="this.form.submit()">
+          {% for y in years %}
+          <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Summary Stats -->
+<div class="grid-4 mb-6">
+  <div class="stat-card green">
+    <div class="stat-icon green">📈</div>
+    <div class="stat-label">Total Income</div>
+    <div class="stat-value green" style="font-size:1.5rem;">₹{{ '{:,.0f}'.format(summary.total_income) }}</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon red">📉</div>
+    <div class="stat-label">Total Expenses</div>
+    <div class="stat-value red" style="font-size:1.5rem;">₹{{ '{:,.0f}'.format(summary.total_expense) }}</div>
+  </div>
+  <div class="stat-card {{ 'green' if summary.net_profit >= 0 else 'red' }}">
+    <div class="stat-icon {{ 'green' if summary.net_profit >= 0 else 'red' }}">{{ '💰' if summary.net_profit >= 0 else '⚠️' }}</div>
+    <div class="stat-label">Net Profit/Loss</div>
+    <div class="stat-value {{ 'green' if summary.net_profit >= 0 else 'red' }}" style="font-size:1.5rem;">
+      {{ '+' if summary.net_profit >= 0 else '' }}₹{{ '{:,.0f}'.format(summary.net_profit) }}
+    </div>
+  </div>
+  <div class="stat-card teal">
+    <div class="stat-icon teal">📊</div>
+    <div class="stat-label">Profit Margin</div>
+    <div class="stat-value teal" style="font-size:1.5rem;">{{ summary.profit_margin }}%</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Monthly Breakdown -->
+  <div class="card">
+    <div class="card-header"><h3>📅 Monthly Breakdown — {{ selected_year }}</h3></div>
+    <div class="card-body" style="padding:0;">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr>
+          </thead>
+          <tbody>
+            {% for row in monthly %}
+            <tr>
+              <td style="font-weight:600;">{{ row.month }}</td>
+              <td style="color:var(--success);font-weight:600;">₹{{ '{:,.0f}'.format(row.income) }}</td>
+              <td style="color:var(--danger);">₹{{ '{:,.0f}'.format(row.expense) }}</td>
+              <td style="font-weight:700;color:{{ 'var(--success)' if row.net >= 0 else 'var(--danger)' }};">
+                {{ '+' if row.net >= 0 else '' }}₹{{ '{:,.0f}'.format(row.net) }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Breakdown -->
+  <div class="card">
+    <div class="card-header"><h3>🏷️ Expense Categories</h3></div>
+    <div class="card-body">
+      {% if category_breakdown %}
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        {% for cat in category_breakdown %}
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+            <span style="font-weight:600;color:var(--text-primary);">{{ cat.category or 'Uncategorized' }}</span>
+            <span style="color:var(--danger);font-weight:700;">₹{{ '{:,.0f}'.format(cat.amount) }}</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;width:{{ cat.pct }}%;transition:width 0.8s ease;"></div>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">{{ cat.pct }}% of total expenses</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="no-data"><div class="icon">🏷️</div><p>No expense categories recorded.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

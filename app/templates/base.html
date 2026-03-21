@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}AquaConnect{% endblock %} | Sustainable Aquaculture</title>
+  <meta name="description" content="AquaConnect – AI-powered aquaculture management for small and medium fish farmers." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐟</text></svg>" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+  <meta name="theme-color" content="#0891b2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container" id="flashContainer">
+    {% for category, message in messages %}
+    <div class="flash {{ category }}" onclick="this.remove()">
+      {% if category == 'success' %}✅{% elif category == 'error' %}❌{% else %}ℹ️{% endif %}
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="app-shell">
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🐟</div>
+      <div class="brand-text">
+        <div class="brand-name">AquaConnect</div>
+        <div class="brand-sub">Aquaculture Platform</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.blueprint == 'dashboard' %}active{% endif %}">
+        <span class="icon">🏠</span> Dashboard
+      </a>
+      <a href="{{ url_for('water_quality.index') }}" class="nav-item {% if request.blueprint == 'water_quality' %}active{% endif %}">
+        <span class="icon">🌊</span> Water Quality
+      </a>
+      <a href="{{ url_for('financial.index') }}" class="nav-item {% if request.blueprint == 'financial' %}active{% endif %}">
+        <span class="icon">📊</span> Financial
+      </a>
+      <a href="{{ url_for('forum.index') }}" class="nav-item {% if request.blueprint == 'forum' %}active{% endif %}">
+        <span class="icon">💬</span> Community Forum
+      </a>
+
+      <div class="nav-section-label" style="margin-top:16px;">Monitoring</div>
+      <a href="{{ url_for('water_quality.alerts') }}" class="nav-item">
+        <span class="icon">🔔</span> Water Alerts
+      </a>
+      <a href="{{ url_for('water_quality.history') }}" class="nav-item">
+        <span class="icon">📋</span> Reading History
+      </a>
+      <a href="{{ url_for('financial.report') }}" class="nav-item">
+        <span class="icon">📑</span> Financial Report
+      </a>
+
+      <div class="nav-section-label" style="margin-top:16px;">Farm</div>
+      <a href="{{ url_for('dashboard.create_farm') }}" class="nav-item">
+        <span class="icon">🐠</span> Add Farm
+      </a>
+      <a href="{{ url_for('forum.search') }}" class="nav-item">
+        <span class="icon">🔍</span> Forum Search
+      </a>
+      <a href="{{ url_for('forum.experts') }}" class="nav-item">
+        <span class="icon">⭐</span> Experts
+      </a>
+
+      <div class="nav-section-label" style="margin-top:16px;">Account</div>
+      <a href="{{ url_for('auth.profile') }}" class="nav-item {% if request.endpoint == 'auth.profile' %}active{% endif %}">
+        <span class="icon">👤</span> Profile
+      </a>
+      <a href="{{ url_for('auth.settings') }}" class="nav-item {% if request.endpoint == 'auth.settings' %}active{% endif %}">
+        <span class="icon">⚙️</span> Settings
+      </a>
+
+      {% if current_user and current_user.role == 'admin' %}
+      <div class="nav-section-label" style="margin-top:16px;">Admin</div>
+      <a href="{{ url_for('admin.index') }}" class="nav-item {% if request.blueprint == 'admin' %}active{% endif %}">
+        <span class="icon">🛡️</span> Admin Panel
+      </a>
+      <a href="{{ url_for('admin.users') }}" class="nav-item">
+        <span class="icon">👥</span> Users
+      </a>
+      <a href="{{ url_for('admin.posts') }}" class="nav-item">
+        <span class="icon">🗂️</span> Moderate Posts
+      </a>
+      {% endif %}
+    </nav>
+
+    {% if current_user %}
+    <div class="sidebar-user">
+      <div class="avatar">{{ current_user.full_name[0].upper() }}</div>
+      <div class="user-info">
+        <div class="name">{{ current_user.full_name }}</div>
+        <div class="role">{{ current_user.role }}</div>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="logout-btn" title="Logout">⏻</a>
+    </div>
+    {% endif %}
+
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+      <div class="topbar-right">
+        {% if current_user %}
+        <span class="topbar-badge">{{ current_user.role | title }}</span>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <main class="page-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script>
+  // Sidebar toggle
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('active');
+  }
+  // Auto-dismiss flash messages
+  setTimeout(() => {
+    const c = document.getElementById('flashContainer');
+    if (c) c.style.opacity = '0', setTimeout(() => c.remove(), 400);
+  }, 4000);
+
+  // Service Worker Registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}")
+        .then(reg => console.log('Service Worker registered', reg))
+        .catch(err => console.error('Service Worker registration failed', err));
+    });
+  }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

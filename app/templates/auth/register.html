@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | AquaConnect</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">❌ {{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="auth-promo">
+      <h2>Join 1,200+ Fish Farmers Using AquaConnect</h2>
+      <p>Get instant access to AI water quality analysis, financial tools, and a community of expert aquaculture practitioners.</p>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🆓</div>
+          <div class="auth-feature-text">Free to get started – no credit card required</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🤖</div>
+          <div class="auth-feature-text">AI-powered insights to prevent fish loss</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">📈</div>
+          <div class="auth-feature-text">Track profitability and forecast revenue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">🐟</div>
+        <span class="auth-logo-text">AquaConnect</span>
+      </div>
+      <h2>Create your account</h2>
+      <p class="subtitle">Start managing your farm smarter today</p>
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control" placeholder="Your full name" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" name="email" class="form-control" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required minlength="6" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select name="role" class="form-control form-select">
+            <option value="farmer">🐠 Fish Farmer</option>
+            <option value="expert">🎓 Aquaculture Expert</option>
+          </select>
+          <span class="form-hint">Experts can provide verified answers in the community forum.</span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Create Account →
+        </button>
+      </form>
+
+      <div class="auth-divider">or</div>
+      <p class="text-center text-sm text-muted">
+        Already have an account?
+        <a href="{{ url_for('auth.login') }}" style="color:var(--primary);font-weight:600;">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+<script>
+  setTimeout(() => { const c = document.querySelector('.flash-container'); if(c) c.remove(); }, 4000);
+</script>
+</body>
+</html>

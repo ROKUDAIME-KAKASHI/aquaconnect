@@ -1,0 +1,74 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Forum Search{% endblock %}
+{% block page_title %}Search Forum{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🔍 Search Forum</h1>
+  <p>Find posts, discussions, and expert answers across the community.</p>
+</div>
+
+<!-- Search Bar -->
+<div class="card mb-6">
+  <div class="card-body" style="padding:20px 24px;">
+    <form method="GET" action="{{ url_for('forum.search') }}">
+      <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search by keyword, topic, or question..." value="{{ query or '' }}" autofocus />
+        <button type="submit" class="btn btn-primary">🔍 Search</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <span style="font-size:0.82rem;color:var(--text-muted);margin-right:4px;">Category:</span>
+        <a href="{{ url_for('forum.search', q=query, category='') }}" class="filter-tab {% if not category %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="{{ url_for('forum.search', q=query, category=cat) }}" class="filter-tab {% if category == cat %}active{% endif %}">{{ cat }}</a>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Results -->
+{% if query %}
+<div style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:16px;">
+  {{ results | length }} result{{ 's' if results | length != 1 }} for <strong>"{{ query }}"</strong>
+  {% if category %} in <strong>{{ category }}</strong>{% endif %}
+</div>
+{% endif %}
+
+{% if results %}
+<div style="display:flex;flex-direction:column;gap:14px;">
+  {% for post in results %}
+  <a href="{{ url_for('forum.post_detail', post_id=post.id) }}" class="post-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+      <span class="badge badge-info">{{ post.category }}</span>
+      {% if post.has_expert_answer %}
+      <span class="badge badge-expert">⭐ Expert Answer</span>
+      {% endif %}
+    </div>
+    <div class="post-title">{{ post.title }}</div>
+    <div class="post-excerpt">{{ post.content[:180] }}{% if post.content | length > 180 %}...{% endif %}</div>
+    <div class="post-meta">
+      <span>👤 {{ post.author_name }}</span>
+      <span>💬 {{ post.reply_count }} replies</span>
+      <span>👁️ {{ post.views }} views</span>
+      <span>📅 {{ post.created_at.strftime('%Y-%m-%d') if post.created_at is string else post.created_at.strftime('%Y-%m-%d') }}</span>
+    </div>
+  </a>
+  {% endfor %}
+{% elif query %}
+<div class="card">
+  <div class="no-data" style="padding:60px;">
+    <div class="icon">🔍</div>
+    <p>No posts found for <strong>"{{ query }}"</strong>. Try different keywords or <a href="{{ url_for('forum.new_post') }}" style="color:var(--primary);font-weight:600;">ask the community</a>.</p>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="no-data" style="padding:60px;">
+    <div class="icon">💬</div>
+    <p>Enter a keyword above to search the community forum.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

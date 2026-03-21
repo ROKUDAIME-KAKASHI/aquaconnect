@@ -1,0 +1,176 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Water Quality Analysis{% endblock %}
+{% block page_title %}Water Quality Analysis{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Water Quality Analysis 🌊</h1>
+  <p>Log water parameters and get instant AI-powered health assessment and recommendations.</p>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+  <!-- Left: Log form + results -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="card">
+      <div class="card-header"><h3>📋 Log New Reading</h3></div>
+      <div class="card-body">
+        {% if not selected_farm %}
+        <div class="no-data">
+          <div class="icon">🏡</div>
+          <p>No farm found. Please create a farm first.</p>
+          <a href="{{ url_for('dashboard.create_farm') }}" class="btn btn-primary btn-sm mt-2">Create Farm</a>
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('water_quality.analyze') }}">
+          <input type="hidden" name="farm_id" value="{{ selected_farm.id }}" />
+
+          {% if farms | length > 1 %}
+          <div class="form-group">
+            <label class="form-label">Select Farm</label>
+            <div class="filter-tabs">
+              {% for f in farms %}
+              <a href="{{ url_for('water_quality.index', farm_id=f.id) }}"
+                 class="filter-tab {% if f.id == selected_farm.id %}active{% endif %}">
+                {{ f.name }}
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">pH Level</label>
+              <input type="number" name="ph" class="form-control" value="7.0" min="0" max="14" step="0.1" required />
+              <span class="form-hint">Optimal: 6.5 – 8.5</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Temperature (°C)</label>
+              <input type="number" name="temperature" class="form-control" value="25" min="0" max="45" step="0.1" required />
+              <span class="form-hint">Optimal: 20 – 30°C</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dissolved Oxygen (mg/L)</label>
+              <input type="number" name="dissolved_oxygen" class="form-control" value="6.0" min="0" max="20" step="0.1" required />
+              <span class="form-hint">Optimal: 5+ mg/L</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ammonia (mg/L)</label>
+              <input type="number" name="ammonia" class="form-control" value="0.0" min="0" max="10" step="0.01" />
+              <span class="form-hint">Optimal: &lt; 0.5 mg/L</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Salinity (ppt)</label>
+              <input type="number" name="salinity" class="form-control" value="0.0" min="0" max="40" step="0.1" />
+              <span class="form-hint">Freshwater: 0 ppt</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            🔍 Analyze Water Quality
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- AI Analysis Result -->
+    {% if analysis_result %}
+    {% set r = analysis_result %}
+    <div class="wq-result-card {{ r.health_status }}">
+      <div class="result-status-icon">
+        {% if r.health_status == 'good' %}✅{% elif r.health_status == 'warning' %}⚠️{% else %}🚨{% endif %}
+      </div>
+      <div class="flex items-center gap-3 mb-4">
+        <div>
+          <div class="result-title">
+            {% if r.health_status == 'good' %}Excellent Water Quality
+            {% elif r.health_status == 'warning' %}Water Quality Warning
+            {% else %}Critical Water Quality Alert
+            {% endif %}
+          </div>
+          <div style="font-size:0.82rem;margin-top:2px;opacity:0.75;">Risk Score</div>
+        </div>
+        <div class="result-score" style="margin-left:auto;{% if r.health_status == 'good' %}color:#065f46{% elif r.health_status == 'warning' %}color:#92400e{% else %}color:#991b1b{% endif %}">
+          {{ r.risk_score }}<span style="font-size:1rem">/100</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;">
+        {% for param, info in r.parameter_summary.items() %}
+        <div style="background:rgba(255,255,255,0.5);border-radius:8px;padding:10px 14px;">
+          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;opacity:0.6;margin-bottom:2px;">{{ param | replace('_',' ') }}</div>
+          <div style="font-size:1.1rem;font-weight:800;">{{ info.value }}</div>
+          <span class="badge badge-{{ info.status }}">{{ info.status }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if r.alerts %}
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;opacity:0.6;margin-bottom:8px;">Alerts</div>
+        <div class="alerts-list">
+          {% for alert in r.alerts %}<div class="alert-item">{{ alert }}</div>{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div>
+        <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;opacity:0.6;margin-bottom:8px;">Recommendations</div>
+        <div class="recs-list">
+          {% for rec in r.recommendations %}<div class="rec-item">{{ rec }}</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: History -->
+  <div class="card">
+    <div class="card-header">
+      <h3>📈 Reading History</h3>
+      {% if selected_farm %}<span class="badge badge-info">{{ selected_farm.name }}</span>{% endif %}
+    </div>
+    <div class="card-body" style="padding:0;">
+      {% if logs %}
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>pH</th>
+              <th>Temp</th>
+              <th>DO</th>
+              <th>NH₃</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td>
+                <span class="badge badge-{{ log.health_status }}">{{ log.health_status }}</span>
+              </td>
+              <td>{{ log.ph }}</td>
+              <td>{{ log.temperature }}°C</td>
+              <td>{{ log.dissolved_oxygen }}</td>
+              <td>{{ log.ammonia }}</td>
+              <td style="color:var(--text-muted);font-size:0.78rem;">
+                {{ log.recorded_at[:10] }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="no-data">
+        <div class="icon">📋</div>
+        <p>No readings logged yet for this farm.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

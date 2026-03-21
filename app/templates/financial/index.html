@@ -1,0 +1,178 @@
+{% set current_user = user %}
+{% extends "base.html" %}
+{% block title %}Financial Planner{% endblock %}
+{% block page_title %}Financial Planner{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Financial Planner 📊</h1>
+  <p>Track income and expenses, analyze profitability, and forecast your farm revenue.</p>
+</div>
+
+{% if not selected_farm %}
+<div class="card" style="text-align:center;padding:60px 40px;">
+  <div style="font-size:3rem;margin-bottom:16px;">📊</div>
+  <p style="color:var(--text-secondary);margin-bottom:24px;">Create a farm first to start tracking finances.</p>
+  <a href="{{ url_for('dashboard.create_farm') }}" class="btn btn-primary">+ Add Farm</a>
+</div>
+{% else %}
+
+<!-- Farm selector -->
+{% if farms | length > 1 %}
+<div class="filter-tabs mb-6">
+  {% for f in farms %}
+  <a href="{{ url_for('financial.index', farm_id=f.id) }}"
+     class="filter-tab {% if f.id == selected_farm.id %}active{% endif %}">
+    {{ f.name }}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Summary Cards -->
+{% if summary %}
+<div class="grid-4 mb-6">
+  <div class="stat-card green">
+    <div class="stat-icon green">💰</div>
+    <div class="stat-label">Total Income</div>
+    <div class="stat-value green">₹{{ "{:,.0f}".format(summary.total_income) }}</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon red">💸</div>
+    <div class="stat-label">Total Expenses</div>
+    <div class="stat-value red">₹{{ "{:,.0f}".format(summary.total_expense) }}</div>
+  </div>
+  <div class="stat-card {% if summary.profit >= 0 %}teal{% else %}red{% endif %}">
+    <div class="stat-icon {% if summary.profit >= 0 %}teal{% else %}red{% endif %}">{% if summary.profit >= 0 %}📈{% else %}📉{% endif %}</div>
+    <div class="stat-label">Net Profit</div>
+    <div class="stat-value {% if summary.profit >= 0 %}teal{% else %}red{% endif %}">
+      ₹{{ "{:,.0f}".format(summary.profit | abs) }}
+    </div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon amber">🎯</div>
+    <div class="stat-label">Profit Margin</div>
+    <div class="stat-value amber">{{ summary.profit_margin_pct }}%</div>
+    <div class="stat-trend">
+      <span class="badge badge-{{ 'success' if summary.profitability == 'profitable' else 'danger' if summary.profitability == 'loss' else 'warning' }}">
+        {{ summary.profitability | replace('_', ' ') | title }}
+      </span>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="grid-2" style="align-items:start;">
+  <!-- Add Transaction Form -->
+  <div class="card">
+    <div class="card-header"><h3>➕ Add Transaction</h3></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('financial.add_transaction') }}">
+        <input type="hidden" name="farm_id" value="{{ selected_farm.id }}" />
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <div style="display:flex;gap:10px;">
+            <label style="flex:1;cursor:pointer;">
+              <input type="radio" name="type" value="income" checked style="display:none;" id="typeIncome" />
+              <div id="incomeBtn" class="btn btn-success btn-block" onclick="selectType('income')" style="border-radius:8px;">📈 Income</div>
+            </label>
+            <label style="flex:1;cursor:pointer;">
+              <input type="radio" name="type" value="expense" style="display:none;" id="typeExpense" />
+              <div id="expenseBtn" class="btn btn-outline btn-block" onclick="selectType('expense')" style="border-radius:8px;">📉 Expense</div>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount (₹)</label>
+          <input type="number" name="amount" class="form-control" placeholder="0.00" min="0" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select name="category" class="form-control form-select" required>
+            <option value="">Select category</option>
+            <optgroup label="Income">
+              <option value="Fish Sales">Fish Sales</option>
+              <option value="Fingerling Sales">Fingerling Sales</option>
+              <option value="Contract Farming">Contract Farming</option>
+              <option value="Other Income">Other Income</option>
+            </optgroup>
+            <optgroup label="Expenses">
+              <option value="Fish Feed">Fish Feed</option>
+              <option value="Fingerlings">Fingerlings</option>
+              <option value="Labor">Labor</option>
+              <option value="Fuel & Electricity">Fuel & Electricity</option>
+              <option value="Medicine & Chemicals">Medicine & Chemicals</option>
+              <option value="Equipment">Equipment</option>
+              <option value="Transport">Transport</option>
+              <option value="Other Expense">Other Expense</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input type="text" name="description" class="form-control" placeholder="Optional details" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="date" name="date" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Record Transaction</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Transaction History -->
+  <div class="card">
+    <div class="card-header">
+      <h3>🧾 Transaction History</h3>
+      <span class="badge badge-info">{{ transactions | length }} records</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      {% if transactions %}
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Category</th><th>Type</th><th>Amount</th></tr>
+          </thead>
+          <tbody>
+            {% for tx in transactions %}
+            <tr>
+              <td style="color:var(--text-muted);font-size:0.8rem;">{{ tx.date }}</td>
+              <td>{{ tx.category }}</td>
+              <td>
+                <span class="badge {% if tx.type == 'income' %}badge-success{% else %}badge-danger{% endif %}">
+                  {{ tx.type | title }}
+                </span>
+              </td>
+              <td style="font-weight:700;color:{% if tx.type == 'income' %}var(--success){% else %}var(--danger){% endif %};">
+                {% if tx.type == 'income' %}+{% else %}–{% endif %}₹{{ "{:,.0f}".format(tx.amount) }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="no-data">
+        <div class="icon">💰</div>
+        <p>No transactions recorded yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function selectType(type) {
+    document.getElementById('typeIncome').checked = (type === 'income');
+    document.getElementById('typeExpense').checked = (type === 'expense');
+    document.getElementById('incomeBtn').className = type === 'income' ? 'btn btn-success btn-block' : 'btn btn-outline btn-block';
+    document.getElementById('expenseBtn').className = type === 'expense' ? 'btn btn-danger btn-block' : 'btn btn-outline btn-block';
+  }
+  // Set today's date
+  document.querySelector('input[type=date]').valueAsDate = new Date();
+</script>
+{% endblock %}

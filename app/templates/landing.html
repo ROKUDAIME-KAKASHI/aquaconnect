@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaConnect — Smart Aquaculture Platform</title>
+  <meta name="description" content="AquaConnect is an AI-powered aquaculture management platform helping fish farmers monitor water quality, manage finances, and connect with experts." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐟</text></svg>" />
+  <style>
+    /* Landing-specific overrides */
+    body { background: #051e30; font-family: 'Inter', sans-serif; }
+
+    /* ── Navbar ── */
+    .land-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 60px; height: 72px;
+      background: rgba(5,30,48,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .land-nav-logo { display: flex; align-items: center; gap: 12px; }
+    .land-nav-logo .icon { width: 40px; height: 40px; background: linear-gradient(135deg,#0891b2,#22d3ee); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .land-nav-logo span { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; font-weight: 800; color: #fff; }
+    .land-nav-links { display: flex; align-items: center; gap: 32px; }
+    .land-nav-links a { color: rgba(255,255,255,0.7); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; text-decoration: none; }
+    .land-nav-links a:hover { color: #fff; }
+    .land-nav-cta { display: flex; align-items: center; gap: 12px; }
+    .btn-ghost { padding: 8px 20px; border-radius: 8px; color: rgba(255,255,255,0.8); font-size: 0.88rem; font-weight: 600; border: 1px solid rgba(255,255,255,0.15); transition: all 0.2s; text-decoration: none; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-cta { padding: 8px 22px; border-radius: 8px; background: linear-gradient(135deg,#0891b2,#22d3ee); color: #fff; font-size: 0.88rem; font-weight: 700; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 14px rgba(8,145,178,0.4); }
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(8,145,178,0.5); }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; padding: 120px 60px 80px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(8,145,178,0.18) 0%, transparent 60%),
+                  linear-gradient(180deg, #051e30 0%, #082f49 100%);
+      text-align: center;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; overflow: hidden;
+      background-image: radial-gradient(circle at 20% 50%, rgba(8,145,178,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(34,211,238,0.06) 0%, transparent 50%);
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 20px; background: rgba(8,145,178,0.15); border: 1px solid rgba(8,145,178,0.3); color: #22d3ee; font-size: 0.8rem; font-weight: 600; margin-bottom: 28px; }
+    .hero h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(2.4rem, 6vw, 4.5rem); font-weight: 900; line-height: 1.1; color: #fff; margin-bottom: 24px; letter-spacing: -1px; }
+    .hero h1 .gradient { background: linear-gradient(135deg, #22d3ee, #0891b2, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-desc { font-size: 1.15rem; color: rgba(255,255,255,0.65); line-height: 1.75; max-width: 620px; margin: 0 auto 40px; }
+    .hero-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-hero-primary { padding: 16px 36px; border-radius: 12px; background: linear-gradient(135deg,#0891b2,#22d3ee); color: #fff; font-size: 1rem; font-weight: 700; text-decoration: none; box-shadow: 0 8px 28px rgba(8,145,178,0.45); transition: all 0.2s; }
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(8,145,178,0.55); }
+    .btn-hero-secondary { padding: 16px 36px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); font-size: 1rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-hero-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.4); }
+    .hero-stats { display: flex; gap: 48px; justify-content: center; margin-top: 60px; flex-wrap: wrap; }
+    .hero-stat .num { font-size: 2rem; font-weight: 800; color: #22d3ee; }
+    .hero-stat .label { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    /* ── Sections ── */
+    section { padding: 100px 60px; }
+    .section-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #22d3ee; margin-bottom: 12px; }
+    .section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 16px; }
+    .section-desc { font-size: 1rem; color: rgba(255,255,255,0.6); line-height: 1.75; max-width: 560px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* ── Features ── */
+    .features-section { background: linear-gradient(180deg, #082f49 0%, #0c3a56 100%); }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+    .feature-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px; transition: all 0.25s; }
+    .feature-card:hover { background: rgba(8,145,178,0.08); border-color: rgba(8,145,178,0.3); transform: translateY(-4px); }
+    .feature-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 20px; }
+    .feature-icon.teal { background: rgba(8,145,178,0.2); }
+    .feature-icon.green { background: rgba(16,185,129,0.2); }
+    .feature-icon.amber { background: rgba(245,158,11,0.2); }
+    .feature-icon.purple { background: rgba(139,92,246,0.2); }
+    .feature-icon.red { background: rgba(239,68,68,0.2); }
+    .feature-icon.blue { background: rgba(59,130,246,0.2); }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .feature-card p { font-size: 0.875rem; color: rgba(255,255,255,0.55); line-height: 1.65; }
+
+    /* ── How It Works ── */
+    .how-section { background: #051e30; }
+    .steps { display: flex; gap: 0; position: relative; margin-top: 60px; }
+    .steps::before { content: ''; position: absolute; top: 28px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, rgba(8,145,178,0.3), rgba(34,211,238,0.3)); }
+    .step { flex: 1; text-align: center; padding: 0 20px; position: relative; }
+    .step-num { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg,#0891b2,#22d3ee); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 auto 20px; box-shadow: 0 4px 20px rgba(8,145,178,0.4); }
+    .step h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .step p { font-size: 0.83rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+    /* ── Testimonials ── */
+    .testi-section { background: linear-gradient(180deg, #0c3a56 0%, #082f49 100%); }
+    .testis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .testi-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; }
+    .testi-text { font-size: 0.9rem; color: rgba(255,255,255,0.7); line-height: 1.7; font-style: italic; margin-bottom: 20px; }
+    .testi-author { display: flex; align-items: center; gap: 12px; }
+    .testi-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#0891b2,#22d3ee); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.9rem; flex-shrink: 0; }
+    .testi-name { font-size: 0.88rem; font-weight: 700; color: #fff; }
+    .testi-role { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .testi-stars { color: #f59e0b; font-size: 0.85rem; margin-bottom: 12px; }
+
+    /* ── CTA Banner ── */
+    .cta-section { background: linear-gradient(135deg,#082f49 0%,#0c3a56 100%); text-align: center; }
+    .cta-box { background: linear-gradient(135deg, rgba(8,145,178,0.12), rgba(34,211,238,0.06)); border: 1px solid rgba(8,145,178,0.25); border-radius: 24px; padding: 70px 60px; max-width: 800px; margin: 0 auto; }
+    .cta-box h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2.6rem; font-weight: 800; color: #fff; margin-bottom: 16px; line-height: 1.2; }
+    .cta-box p { font-size: 1rem; color: rgba(255,255,255,0.6); margin-bottom: 36px; }
+
+    /* ── Footer ── */
+    .land-footer { background: #030d18; border-top: 1px solid rgba(255,255,255,0.05); padding: 40px 60px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .land-footer-logo { display: flex; align-items: center; gap: 10px; }
+    .land-footer-logo span { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.6); }
+    .land-footer p { font-size: 0.78rem; color: rgba(255,255,255,0.3); }
+    .land-footer-links { display: flex; gap: 20px; }
+    .land-footer-links a { font-size: 0.78rem; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s; }
+    .land-footer-links a:hover { color: rgba(255,255,255,0.8); }
+
+    @media (max-width: 900px) {
+      .land-nav { padding: 0 20px; }
+      .land-nav-links { display: none; }
+      section { padding: 70px 24px; }
+      .hero { padding: 120px 24px 60px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { flex-direction: column; gap: 32px; }
+      .steps::before { display: none; }
+      .testis { grid-template-columns: 1fr; }
+      .land-footer { flex-direction: column; text-align: center; padding: 32px 24px; }
+    }
+    @media (max-width: 600px) {
+      .hero-stats { gap: 28px; }
+      .cta-box { padding: 40px 24px; }
+      .cta-box h2 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="land-nav">
+  <div class="land-nav-logo">
+    <div class="icon">🐟</div>
+    <span>AquaConnect</span>
+  </div>
+  <div class="land-nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#testimonials">Testimonials</a>
+  </div>
+  <div class="land-nav-cta">
+    <a href="{{ url_for('auth.login') }}" class="btn-ghost">Sign In</a>
+    <a href="{{ url_for('auth.register') }}" class="btn-cta">Get Started Free</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+    <div class="hero-badge">🐠 AI-Powered Aquaculture Platform</div>
+    <h1>
+      Smarter Fish Farming<br>
+      Starts with <span class="gradient">AquaConnect</span>
+    </h1>
+    <p class="hero-desc">
+      Monitor water quality in real-time, get AI-driven insights, manage farm finances,
+      and connect with a community of experts — all in one powerful platform.
+    </p>
+    <div class="hero-ctas">
+      <a href="{{ url_for('auth.register') }}" class="btn-hero-primary">🚀 Start for Free</a>
+      <a href="{{ url_for('auth.login') }}" class="btn-hero-secondary">Sign In →</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="num">2,400+</div>
+        <div class="label">Active Farmers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">98%</div>
+        <div class="label">Water Quality Accuracy</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">35%</div>
+        <div class="label">Avg. Yield Increase</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">150+</div>
+        <div class="label">Expert Advisors</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="section-label">What We Offer</div>
+    <div class="section-title">Everything Your Farm Needs</div>
+    <p class="section-desc">Built specifically for aquaculture, AquaConnect brings enterprise tools directly to small and medium fish farms.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon teal">🌊</div>
+        <h3>Real-Time Water Monitoring</h3>
+        <p>Track pH, dissolved oxygen, temperature, ammonia, and salinity with instant AI health scoring. Log readings manually or via IoT sensors.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon green">🤖</div>
+        <h3>AI-Driven Analysis</h3>
+        <p>Our AI engine analyzes water parameters, detects anomalies, and generates plain-language recommendations tailored to your fish species.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon amber">📊</div>
+        <h3>Financial Planning</h3>
+        <p>Record income and expenses, view profit/loss summaries, generate reports, and export data to CSV for accountants or stakeholders.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">💬</div>
+        <h3>Expert Community Forum</h3>
+        <p>Ask questions, share experiences, and get answers from verified aquaculture experts. Expert replies are clearly highlighted.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon red">🔔</div>
+        <h3>Smart Alerts</h3>
+        <p>Get instantly notified when water conditions turn critical. Never miss a dangerous pH drop or oxygen depletion event again.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon blue">📡</div>
+        <h3>IoT-Ready Integration</h3>
+        <p>Connect automated sensors to push readings directly via our REST API. Reduce manual labor and improve data accuracy 24/7.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="how-section" id="how-it-works">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:0;">
+      <div class="section-label" style="justify-content:center;display:flex;">Simple Process</div>
+      <div class="section-title" style="font-size:2.2rem;">Get Started in Minutes</div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create Your Account</h3>
+        <p>Sign up free in under 60 seconds. No credit card required to get started.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Add Your Farm</h3>
+        <p>Enter your farm's location, species, and water source to personalize your experience.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Log Water Readings</h3>
+        <p>Enter water quality data manually or connect an IoT sensor for live readings.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Get AI Insights</h3>
+        <p>Receive instant health scores, alerts, and actionable recommendations from our AI.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <h3>Grow Profitably</h3>
+        <p>Track finances, engage with experts, and scale your aquaculture operation confidently.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testi-section" id="testimonials">
+  <div class="container">
+    <div class="section-label">Trusted by Farmers</div>
+    <div class="section-title">What Our Users Say</div>
+    <div class="testis">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Since using AquaConnect we reduced fish mortality by 40%. The water quality alerts caught a critical oxygen drop we would have missed overnight."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">RK</div>
+          <div>
+            <div class="testi-name">Rajan Kumar</div>
+            <div class="testi-role">Tilapia Farmer, Tamil Nadu</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The financial tracking feature alone is worth it. I finally have a clear picture of my profitability across all three ponds. The export to CSV for my accountant is perfect."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">AM</div>
+          <div>
+            <div class="testi-name">Amina Mensah</div>
+            <div class="testi-role">Catfish Farmer, Ghana</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"As an aquaculture expert, I love how I can directly help farmers in the forum. The platform organizes everything so well — it's truly built for this industry."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">DR</div>
+          <div>
+            <div class="testi-name">Dr. Priya Raghav</div>
+            <div class="testi-role">Aquaculture Expert, Kerala</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box">
+      <h2>Ready to Transform Your Fish Farm?</h2>
+      <p>Join thousands of farmers already using AquaConnect to grow smarter, healthier, and more profitable operations.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <a href="{{ url_for('auth.register') }}" class="btn-hero-primary">🐟 Create Free Account</a>
+        <a href="{{ url_for('auth.login') }}" class="btn-hero-secondary">Sign In →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="land-footer">
+  <div class="land-footer-logo">
+    <div style="width:30px;height:30px;background:linear-gradient(135deg,#0891b2,#22d3ee);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;">🐟</div>
+    <span>AquaConnect</span>
+  </div>
+  <p>© 2026 AquaConnect. Built for sustainable aquaculture.</p>
+  <div class="land-footer-links">
+    <a href="{{ url_for('auth.login') }}">Login</a>
+    <a href="{{ url_for('auth.register') }}">Register</a>
+  </div>
+</footer>
+
+</body>
+</html>
