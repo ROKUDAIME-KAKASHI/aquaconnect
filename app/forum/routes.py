@@ -37,6 +37,7 @@ def new_post():
     user = get_current_user()
     if not user:
         return redirect(url_for('auth.login'))
+    if request.method == 'POST':
         category = request.form.get('category', 'General')
         post = ForumPost(
             author_id=user.id,
