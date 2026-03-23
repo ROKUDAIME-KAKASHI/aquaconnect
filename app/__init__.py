@@ -5,6 +5,8 @@ from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,6 +15,7 @@ db = SQLAlchemy()
 jwt = JWTManager()
 bcrypt = Bcrypt()
 migrate = Migrate()
+limiter = Limiter(key_func=get_remote_address)
 
 
 def create_app():
@@ -26,15 +29,19 @@ def create_app():
     app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies']
     app.config['JWT_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'
     app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+    app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
 
     # ── Extensions ───────────────────────────────────────────────────────────
     from whitenoise import WhiteNoise
+    from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = WhiteNoise(app.wsgi_app, root='app/static/', prefix='static/')
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
+    limiter.init_app(app)
     CORS(app)
 
     # ── Register Blueprints ──────────────────────────────────────────────────

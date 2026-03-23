@@ -68,18 +68,24 @@ def farm_detail(farm_id):
     if farm.owner_id != user.id:
         flash('Access denied.', 'error')
         return redirect(url_for('dashboard.index'))
+    logs_count = WaterQualityLog.query.filter_by(farm_id=farm.id).count()
     logs = [l.to_dict() for l in
             WaterQualityLog.query.filter_by(farm_id=farm.id)
-            .order_by(WaterQualityLog.recorded_at.desc()).all()]
+            .order_by(WaterQualityLog.recorded_at.desc()).limit(8).all()]
     from app.models import Transaction
     tx_count = Transaction.query.filter_by(farm_id=farm.id).count()
     recent_txs = Transaction.query.filter_by(farm_id=farm.id)\
         .order_by(Transaction.date.desc()).limit(8).all()
     latest_log = logs[0] if logs else None
+    
+    from app.services import get_weather_alert
+    weather_forecast = get_weather_alert(farm.location)
+
     return render_template('dashboard/farm_detail.html',
-                           user=user, farm=farm, logs=logs,
+                           user=user, farm=farm, logs=logs, logs_count=logs_count,
                            latest_log=latest_log, tx_count=tx_count,
-                           transactions=[t.to_dict() for t in recent_txs])
+                           transactions=[t.to_dict() for t in recent_txs],
+                           weather_forecast=weather_forecast)
 
 
 @dashboard_bp.route('/farm/<int:farm_id>/edit', methods=['GET', 'POST'])

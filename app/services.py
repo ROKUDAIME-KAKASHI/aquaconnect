@@ -124,3 +124,102 @@ def calculate_financial_summary(transactions: list) -> dict:
         'profitability': 'profitable' if profit > 0 else ('break_even' if profit == 0 else 'loss'),
         'by_category': by_category,
     }
+
+
+def get_weather_alert(location: str) -> dict:
+    """
+    Geocodes a location string and fetches a 3-day forecast from Open-Meteo.
+    Returns aquaculture-specific weather alerts.
+    """
+    if not location:
+        return None
+        
+    try:
+        import urllib.request
+        import urllib.parse
+        import ssl
+        import json
+        
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        
+        # 1. Geocode
+        safe_loc = urllib.parse.quote(location)
+        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={safe_loc}&count=1"
+        req = urllib.request.Request(geo_url, headers={'User-Agent': 'AquaConnect/1.0'})
+        with urllib.request.urlopen(req, timeout=5, context=ctx) as response:
+            geo_data = json.loads(response.read().decode())
+            
+        if not geo_data.get('results'):
+            return None
+            
+        lat = geo_data['results'][0]['latitude']
+        lon = geo_data['results'][0]['longitude']
+        loc_name = geo_data['results'][0]['name']
+        
+        # 2. Weather
+        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=temperature_2m_max,precipitation_sum&timezone=auto&forecast_days=3"
+        req2 = urllib.request.Request(weather_url, headers={'User-Agent': 'AquaConnect/1.0'})
+        with urllib.request.urlopen(req2, timeout=5, context=ctx) as response2:
+            weather_data = json.loads(response2.read().decode())
+            
+        daily = weather_data.get('daily', {})
+        max_temps = daily.get('temperature_2m_max', [])
+        precips = daily.get('precipitation_sum', [])
+        dates = daily.get('time', [])
+        
+        # 3. Analyze
+        alert_level = 'info'
+        alert_text = "Upcoming weather looks stable for aquaculture."
+        alert_icon = "🌤️"
+        
+        if max_temps and max(max_temps) >= 35.0:
+            alert_level = 'danger'
+            alert_text = "High Heat Advisory: Temperatures over 35°C expected. Dissolved oxygen drops quickly in heat. Maximize aeration."
+            alert_icon = "🥵"
+        elif precips and sum(precips) >= 15.0:
+            alert_level = 'warning'
+            alert_text = f"Heavy Rain Expected ({sum(precips):.1f}mm). Prepare lime mapping as pH may drop suddenly."
+            alert_icon = "🌧️"
+        elif max_temps and min(max_temps) <= 18.0:
+            alert_level = 'warning'
+            alert_text = "Cold Temps expected. Fish metabolism will decrease, reduce feeding to avoid water fouling."
+            alert_icon = "❄️"
+            
+        return {
+            'location_name': loc_name,
+            'alert_level': alert_level,
+            'alert_text': alert_text,
+            'alert_icon': alert_icon,
+            'forecast': [
+                {'date': dates[i], 'temp': max_temps[i], 'precip': precips[i]}
+                for i in range(len(dates))
+            ] if dates else []
+        }
+        
+    except Exception as e:
+        print(f"Weather API Error: {e}")
+        return None
+
+def generate_ai_expert_reply(title: str, content: str) -> str:
+    """Uses Google Gemini API to generate an expert aquaculture response."""
+    import os
+    import google.generativeai as genai
+    
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        return "The AI Expert is currently offline (API key not configured). Please contact human support."
+        
+    try:
+        genai.configure(api_key=api_key)
+        # Using 1.5-flash as it is the most stable free tier model
+        model = genai.GenerativeModel('gemini-1.5-flash',
+            system_instruction="You are AquaConnect AI, an expert, specialized aquaculture scientist and veterinarian. A farmer is asking for help on a forum. Give a highly practical, scientifically accurate, and encouraging response in clean markdown. Keep it concise (under 250 words)."
+        )
+        prompt = f"Forum Post Title: {title}\n\nContent: {content}\n\nPlease help this farmer."
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        return "I apologize, but I am currently unable to process your request. A human expert will review this soon."

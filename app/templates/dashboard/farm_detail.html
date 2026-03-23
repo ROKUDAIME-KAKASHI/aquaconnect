@@ -18,12 +18,38 @@
   </div>
 </div>
 
+{% if weather_forecast %}
+<!-- Weather Alert Card -->
+<div class="card mb-6" style="border-left: 4px solid {{ '#ef4444' if weather_forecast.alert_level == 'danger' else '#f59e0b' if weather_forecast.alert_level == 'warning' else '#3b82f6' }}; margin-top: 10px;">
+  <div class="card-body" style="display:flex;align-items:center;gap:15px;padding:15px 20px;">
+    <div style="font-size:2.5rem;">{{ weather_forecast.alert_icon }}</div>
+    <div style="flex: 1;">
+      <h4 style="margin:0 0 4px 0;font-size:1.1rem;color:var(--text-main);">
+        3-Day Weather Forecast for {{ weather_forecast.location_name }}
+      </h4>
+      <p style="margin:0;font-size:0.9rem;color:var(--text-muted);">
+        {{ weather_forecast.alert_text }}
+      </p>
+    </div>
+    <div style="display:flex;gap:10px;text-align:center;">
+      {% for day in weather_forecast.forecast %}
+      <div style="background:var(--bg-secondary);padding:6px 12px;border-radius:6px;">
+        <div style="font-size:0.75rem;font-weight:600;margin-bottom:2px;">{{ day.date[5:] }}</div>
+        <div style="font-size:0.85rem;font-weight:600;">{{ day.temp }}°<span style="font-size:0.7rem;">C</span></div>
+        <div style="font-size:0.75rem;color:var(--primary);font-weight:600;">{{ day.precip }}mm</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <!-- Stats Row -->
 <div class="grid-4 mb-6">
   <div class="stat-card teal">
     <div class="stat-icon teal">🌊</div>
     <div class="stat-label">Water Readings</div>
-    <div class="stat-value teal">{{ logs | length }}</div>
+    <div class="stat-value teal">{{ logs_count }}</div>
     <div class="stat-trend">Total recorded</div>
   </div>
   <div class="stat-card {% if latest_log %}{{ latest_log.health_status == 'good' and 'green' or latest_log.health_status == 'warning' and 'amber' or 'red' }}{% else %}green{% endif %}">
@@ -88,9 +114,9 @@
           </tbody>
         </table>
       </div>
-      {% if logs | length > 8 %}
+      {% if logs_count > 8 %}
       <div style="padding:14px 20px;text-align:center;border-top:1px solid var(--border);">
-        <a href="{{ url_for('water_quality.history', farm_id=farm.id) }}" class="btn btn-outline btn-sm">View All {{ logs | length }} Readings</a>
+        <a href="{{ url_for('water_quality.history', farm_id=farm.id) }}" class="btn btn-outline btn-sm">View All {{ logs_count }} Readings</a>
       </div>
       {% endif %}
       {% else %}

@@ -37,15 +37,44 @@ def new_post():
     user = get_current_user()
     if not user:
         return redirect(url_for('auth.login'))
-    if request.method == 'POST':
+        category = request.form.get('category', 'General')
         post = ForumPost(
             author_id=user.id,
             title=request.form.get('title', '').strip(),
             content=request.form.get('content', '').strip(),
-            category=request.form.get('category', 'General'),
+            category=category,
         )
         db.session.add(post)
         db.session.commit()
+        
+        # --- AI Expert Auto-Reply ---
+        if category in ['Disease & Health', 'Water Quality']:
+            from app.services import generate_ai_expert_reply
+            from app.models import User, ForumReply
+            
+            # Find or insert the AI user identity
+            ai_user = User.query.filter_by(email='ai_expert@aquaconnect.com').first()
+            if not ai_user:
+                ai_user = User(
+                    full_name='AquaConnect AI',
+                    email='ai_expert@aquaconnect.com',
+                    password_hash='ai_generated_placeholder',
+                    role='expert'
+                )
+                db.session.add(ai_user)
+                db.session.commit()
+                
+            ai_content = generate_ai_expert_reply(post.title, post.content)
+            
+            ai_reply = ForumReply(
+                post_id=post.id,
+                author_id=ai_user.id,
+                content=ai_content,
+                is_expert_answer=True
+            )
+            db.session.add(ai_reply)
+            db.session.commit()
+
         return redirect(url_for('forum.post_detail', post_id=post.id))
     return render_template('forum/new_post.html', user=user, categories=CATEGORIES)
 

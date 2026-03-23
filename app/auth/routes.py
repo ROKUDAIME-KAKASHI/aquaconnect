@@ -11,7 +11,7 @@ from flask_jwt_extended import (
 )
 from app.auth import auth_bp
 from app.models import User, Farm, WaterQualityLog, ForumPost, ForumReply
-from app import db, bcrypt
+from app import db, bcrypt, limiter
 
 
 def get_current_user():
@@ -33,6 +33,7 @@ def landing():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", error_message="Too many login attempts. Please try again in 1 minute.")
 def login():
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
@@ -48,6 +49,7 @@ def login():
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit("10 per day", error_message="Too many accounts created from this IP. Please try again tomorrow.")
 def register():
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
@@ -111,6 +113,7 @@ def send_reset_email(to_email, reset_link):
 
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("3 per minute", error_message="Too many password reset requests. Please try again later.")
 def forgot_password():
     sent = False
     if request.method == 'POST':
