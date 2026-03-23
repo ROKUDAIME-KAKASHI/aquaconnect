@@ -213,13 +213,26 @@ def generate_ai_expert_reply(title: str, content: str) -> str:
         
     try:
         genai.configure(api_key=api_key)
-        # Using 1.5-flash as it is the most stable free tier model
-        model = genai.GenerativeModel('gemini-1.5-flash',
-            system_instruction="You are AquaConnect AI, an expert, specialized aquaculture scientist and veterinarian. A farmer is asking for help on a forum. Give a highly practical, scientifically accurate, and encouraging response in clean markdown. Keep it concise (under 250 words)."
-        )
         prompt = f"Forum Post Title: {title}\n\nContent: {content}\n\nPlease help this farmer."
-        response = model.generate_content(prompt)
-        return response.text
+        
+        # Depending on the user's specific Google AI Studio tier, certain model names might be restricted.
+        # We loop through the standard naming conventions to find the one associated with their API key.
+        available_models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-pro']
+        
+        for m in available_models:
+            try:
+                model = genai.GenerativeModel(m,
+                    system_instruction="You are AquaConnect AI, an expert, specialized aquaculture scientist and veterinarian. A farmer is asking for help on a forum. Give a highly practical, scientifically accurate, and encouraging response in clean markdown. Keep it concise (under 250 words)."
+                )
+                response = model.generate_content(prompt)
+                return response.text
+            except Exception as inner_e:
+                print(f"[AI Fallback] Model {m} failed: {inner_e}")
+                continue
+                
+        # If all loops fail, the outer exception block catches it
+        raise Exception("All targeted Gemini models returned access or quota errors.")
+        
     except Exception as e:
         print(f"Gemini API Error: {e}")
         return "I apologize, but I am currently unable to process your request. A human expert will review this soon."
