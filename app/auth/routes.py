@@ -1,6 +1,10 @@
 import secrets
+import os
+import smtplib
+from email.message import EmailMessage
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from datetime import datetime, timezone, timedelta
-from flask import render_template, redirect, url_for, request, flash, make_response
+from flask import render_template, redirect, url_for, request, flash, make_response, current_app
 from flask_jwt_extended import (
     create_access_token, set_access_cookies, unset_jwt_cookies,
     verify_jwt_in_request, get_jwt_identity
@@ -8,9 +12,6 @@ from flask_jwt_extended import (
 from app.auth import auth_bp
 from app.models import User, Farm, WaterQualityLog, ForumPost, ForumReply
 from app import db, bcrypt
-
-# In-memory token store (production: use Redis or DB table)
-_reset_tokens = {}  # token -> (user_id, expires_at)
 
 
 def get_current_user():
@@ -79,6 +80,36 @@ def logout():
 
 # ── Forgot / Reset Password ──────────────────────────────────────────────────
 
+def send_reset_email(to_email, reset_link):
+    smtp_server = os.environ.get('SMTP_SERVER')
+    smtp_user = os.environ.get('SMTP_USERNAME')
+    smtp_pass = os.environ.get('SMTP_PASSWORD')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+    
+    if not (smtp_server and smtp_user and smtp_pass):
+        # Fallback for local development
+        print("\n" + "="*50)
+        print("📨 MOCK EMAIL: Password Reset Link")
+        print(f"To: {to_email}")
+        print(f"Link: {reset_link}")
+        print("="*50 + "\n")
+        return
+
+    msg = EmailMessage()
+    msg['Subject'] = 'Reset your AquaConnect Password'
+    msg['From'] = smtp_user
+    msg['To'] = to_email
+    msg.set_content(f"Hello,\n\nClick the link below to reset your password:\n\n{reset_link}\n\nIf you did not request a password reset, please ignore this email.\n\nThanks,\nAquaConnect Team")
+    
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     sent = False
@@ -86,24 +117,24 @@ def forgot_password():
         email = request.form.get('email', '').strip().lower()
         user = User.query.filter_by(email=email).first()
         if user:
-            token = secrets.token_urlsafe(32)
-            expires = datetime.now(timezone.utc) + timedelta(hours=1)
-            _reset_tokens[token] = (user.id, expires)
+            s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+            token = s.dumps(user.email, salt='password-reset-salt')
+            reset_link = url_for('auth.reset_password', token=token, _external=True)
+            send_reset_email(user.email, reset_link)
         sent = True  # always show success to prevent email enumeration
     return render_template('auth/forgot_password.html', sent=sent)
 
 
 @auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    entry = _reset_tokens.get(token)
+    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     invalid = False
-    if not entry:
+    email = None
+    
+    try:
+        email = s.loads(token, salt='password-reset-salt', max_age=3600) # 1 hour
+    except (SignatureExpired, BadSignature):
         invalid = True
-    else:
-        user_id, expires = entry
-        if datetime.now(timezone.utc) > expires:
-            _reset_tokens.pop(token, None)
-            invalid = True
 
     if request.method == 'POST' and not invalid:
         new_pwd = request.form.get('password', '')
@@ -113,11 +144,10 @@ def reset_password(token):
         elif new_pwd != confirm:
             flash('Passwords do not match.', 'error')
         else:
-            user = User.query.get(user_id)
+            user = User.query.filter_by(email=email).first()
             if user:
                 user.password_hash = bcrypt.generate_password_hash(new_pwd).decode('utf-8')
                 db.session.commit()
-            _reset_tokens.pop(token, None)
             flash('Password reset successfully! Please sign in.', 'success')
             return redirect(url_for('auth.login'))
 
