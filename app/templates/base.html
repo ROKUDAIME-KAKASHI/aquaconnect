@@ -129,6 +129,7 @@
           <option value="ta" {% if session.get('language') == 'ta' or (current_user and current_user.language == 'ta') %}selected{% endif %}>தமிழ் (Tamil)</option>
           <option value="bn" {% if session.get('language') == 'bn' or (current_user and current_user.language == 'bn') %}selected{% endif %}>বাংলা (Bengali)</option>
           <option value="ml" {% if session.get('language') == 'ml' or (current_user and current_user.language == 'ml') %}selected{% endif %}>മലയാളം (Malayalam)</option>
+          <option value="kn" {% if session.get('language') == 'kn' or (current_user and current_user.language == 'kn') %}selected{% endif %}>ಕನ್ನಡ (Kannada)</option>
         </select>
         {% if current_user %}
         <span class="topbar-badge">{{ current_user.role | title }}</span>
@@ -165,5 +166,20 @@
   }
 </script>
 {% block scripts %}{% endblock %}
+
+<!-- Google Translate Magic Integration for Dynamic Data -->
+<div id="google_translate_element" style="display:none;"></div>
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<style>
+  .goog-te-banner-frame.skiptranslate { display: none !important; }
+  body { top: 0px !important; }
+  .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
+</style>
+
 </body>
 </html>

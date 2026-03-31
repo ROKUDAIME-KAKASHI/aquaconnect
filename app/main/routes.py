@@ -14,7 +14,7 @@ def index():
 
 @main_bp.route('/set_language/<lang>')
 def set_language(lang):
-    if lang not in ['en', 'hi', 'bn', 'ta', 'te', 'ml']:
+    if lang not in ['en', 'hi', 'bn', 'ta', 'te', 'ml', 'kn']:
         lang = 'en'
     
     session['language'] = lang
@@ -30,4 +30,10 @@ def set_language(lang):
     except Exception:
         pass
         
-    return redirect(request.referrer or url_for('main.index'))
+    resp = redirect(request.referrer or url_for('main.index'))
+    if lang == 'en':
+        resp.delete_cookie('googtrans', path='/')
+    else:
+        resp.set_cookie('googtrans', f'/en/{lang}', path='/')
+        
+    return resp

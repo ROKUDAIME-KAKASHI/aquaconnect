@@ -64,7 +64,7 @@ def create_app():
                     return user.language
         except Exception:
             pass
-        return request.accept_languages.best_match(['en', 'hi', 'bn', 'ta', 'te', 'ml']) or 'en'
+        return request.accept_languages.best_match(['en', 'hi', 'bn', 'ta', 'te', 'ml', 'kn']) or 'en'
     
     babel.init_app(app, locale_selector=get_locale)
 
