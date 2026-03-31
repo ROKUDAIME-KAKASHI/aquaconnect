@@ -16,6 +16,8 @@ jwt = JWTManager()
 bcrypt = Bcrypt()
 migrate = Migrate()
 limiter = Limiter(key_func=get_remote_address)
+from flask_babel import Babel
+babel = Babel()
 
 
 def create_app():
@@ -43,6 +45,28 @@ def create_app():
     migrate.init_app(app, db)
     limiter.init_app(app)
     CORS(app)
+
+    from flask import request, session
+
+    def get_locale():
+        # if a user is logged in, use the locale from the user settings
+        lang = session.get('language')
+        if lang:
+            return lang
+        try:
+            from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+            from app.models import User
+            verify_jwt_in_request(locations=['cookies'], optional=True)
+            uid = get_jwt_identity()
+            if uid:
+                user = User.query.get(int(uid))
+                if user and user.language:
+                    return user.language
+        except Exception:
+            pass
+        return request.accept_languages.best_match(['en', 'hi', 'bn', 'ta', 'te', 'ml']) or 'en'
+    
+    babel.init_app(app, locale_selector=get_locale)
 
     # ── Register Blueprints ──────────────────────────────────────────────────
     from app.auth.routes import auth_bp

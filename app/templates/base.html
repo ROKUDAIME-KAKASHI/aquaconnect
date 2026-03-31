@@ -44,18 +44,18 @@
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-section-label">Main</div>
+      <div class="nav-section-label">{{ _('Main') }}</div>
       <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.blueprint == 'dashboard' %}active{% endif %}">
-        <span class="icon">🏠</span> Dashboard
+        <span class="icon">🏠</span> {{ _('Dashboard') }}
       </a>
       <a href="{{ url_for('water_quality.index') }}" class="nav-item {% if request.blueprint == 'water_quality' %}active{% endif %}">
-        <span class="icon">🌊</span> Water Quality
+        <span class="icon">🌊</span> {{ _('Water Quality') }}
       </a>
       <a href="{{ url_for('financial.index') }}" class="nav-item {% if request.blueprint == 'financial' %}active{% endif %}">
-        <span class="icon">📊</span> Financial
+        <span class="icon">📊</span> {{ _('Financial') }}
       </a>
       <a href="{{ url_for('forum.index') }}" class="nav-item {% if request.blueprint == 'forum' %}active{% endif %}">
-        <span class="icon">💬</span> Community Forum
+        <span class="icon">💬</span> {{ _('Community Forum') }}
       </a>
 
       <div class="nav-section-label" style="margin-top:16px;">Monitoring</div>
@@ -122,6 +122,14 @@
       <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
       <span class="topbar-title">{% block page_title %}{% endblock %}</span>
       <div class="topbar-right">
+        <select onchange="window.location.href='/set_language/'+this.value" class="language-selector" style="margin-right: 15px; padding: 5px; border-radius: 4px; border: 1px solid #ccc; background: white; color: #333;">
+          <option value="en" {% if session.get('language') == 'en' or (current_user and current_user.language == 'en') %}selected{% endif %}>English</option>
+          <option value="hi" {% if session.get('language') == 'hi' or (current_user and current_user.language == 'hi') %}selected{% endif %}>हिन्दी (Hindi)</option>
+          <option value="te" {% if session.get('language') == 'te' or (current_user and current_user.language == 'te') %}selected{% endif %}>తెలుగు (Telugu)</option>
+          <option value="ta" {% if session.get('language') == 'ta' or (current_user and current_user.language == 'ta') %}selected{% endif %}>தமிழ் (Tamil)</option>
+          <option value="bn" {% if session.get('language') == 'bn' or (current_user and current_user.language == 'bn') %}selected{% endif %}>বাংলা (Bengali)</option>
+          <option value="ml" {% if session.get('language') == 'ml' or (current_user and current_user.language == 'ml') %}selected{% endif %}>മലയാളം (Malayalam)</option>
+        </select>
         {% if current_user %}
         <span class="topbar-badge">{{ current_user.role | title }}</span>
         {% endif %}
