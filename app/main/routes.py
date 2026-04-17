@@ -1,8 +1,17 @@
-from flask import render_template, redirect, url_for, request, session
+from flask import render_template, redirect, url_for, request, session, current_app, send_from_directory
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from app.main import main_bp
 from app import db
 from app.models import User
+
+@main_bp.route('/manifest.json')
+def manifest():
+    return send_from_directory(current_app.static_folder, 'manifest.json')
+
+@main_bp.route('/sw.js')
+def service_worker():
+    return send_from_directory(current_app.static_folder, 'sw.js')
+
 
 @main_bp.route('/')
 def index():
