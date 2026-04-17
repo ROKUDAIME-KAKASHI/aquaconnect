@@ -110,6 +110,23 @@ def create_app():
         except Exception:
             return {'current_user': None}
 
+    @app.before_request
+    def update_last_active():
+        from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+        from app.models import User
+        from datetime import datetime, timezone
+        from app import db
+        try:
+            verify_jwt_in_request(locations=['cookies'], optional=True)
+            uid = get_jwt_identity()
+            if uid:
+                user = User.query.get(int(uid))
+                if user:
+                    user.last_active = datetime.now(timezone.utc)
+                    db.session.commit()
+        except Exception:
+            pass
+
     # ── Create tables ────────────────────────────────────────────────────────
     with app.app_context():
         db.create_all()

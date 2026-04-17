@@ -67,11 +67,22 @@
               </form>
             </td>
             <td style="font-weight:600;color:var(--primary);">{{ u.farm_count }}</td>
-            <td style="font-size:0.8rem;color:var(--text-muted);">{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+            <td style="font-size:0.8rem;color:var(--text-muted);">
+              {% if u.created_at is string %}
+                {{ u.created_at[:10] }}
+              {% else %}
+                {{ u.created_at.strftime('%Y-%m-%d') }}
+              {% endif %}
+            </td>
             <td>
               <span class="badge {{ 'badge-success' if u.is_active else 'badge-danger' }}">
                 {{ '✅ Active' if u.is_active else '🚫 Banned' }}
               </span>
+              {% if u.is_online %}
+                <span class="badge" style="background:#10b981; margin-left:4px; font-size:0.7rem;">🟢 Online</span>
+              {% else %}
+                <span class="badge" style="background:#6b7280; margin-left:4px; font-size:0.7rem;">⚪ Offline</span>
+              {% endif %}
             </td>
             <td>
               <form method="POST" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" style="display:inline;">

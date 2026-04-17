@@ -64,10 +64,19 @@ def users():
     raw_users = q.order_by(User.created_at.desc()).all()
 
     users_data = []
+    from datetime import datetime, timezone, timedelta
+    now_utc = datetime.now(timezone.utc)
     for u in raw_users:
+        is_online = False
+        if u.last_active:
+            la = u.last_active.replace(tzinfo=timezone.utc) if u.last_active.tzinfo is None else u.last_active
+            if now_utc - la < timedelta(minutes=5):
+                is_online = True
+
         users_data.append({
             'id': u.id, 'full_name': u.full_name, 'email': u.email,
             'role': u.role, 'is_active': u.is_active,
+            'is_online': is_online,
             'created_at': u.created_at.isoformat(),
             'farm_count': Farm.query.filter_by(owner_id=u.id).count(),
         })

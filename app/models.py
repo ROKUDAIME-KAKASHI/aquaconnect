@@ -12,6 +12,7 @@ class User(db.Model):
     role = db.Column(db.String(20), default='farmer')  # farmer | expert | admin
     language = db.Column(db.String(10), default='en')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    last_active = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
 
     farms = db.relationship('Farm', backref='owner', lazy=True)
