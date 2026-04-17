@@ -193,8 +193,13 @@ function googleTranslateElementInit() {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if (isUserLoggedInPWA) {
+    
+    const dismissedForever = localStorage.getItem('pwaPromptDismissed');
+    const shownThisSession = sessionStorage.getItem('pwaPromptShown');
+    
+    if (isUserLoggedInPWA && !dismissedForever && !shownThisSession) {
       showInstallPromotion();
+      sessionStorage.setItem('pwaPromptShown', 'true');
     }
   });
 
@@ -229,6 +234,7 @@ function googleTranslateElementInit() {
     
     document.getElementById('pwa-close-btn').addEventListener('click', () => {
       banner.style.display = 'none';
+      localStorage.setItem('pwaPromptDismissed', 'true');
     });
   }
 </script>
