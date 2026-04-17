@@ -7,6 +7,8 @@
   <meta name="description" content="AquaConnect is an AI-powered aquaculture management platform helping fish farmers monitor water quality, manage finances, and connect with experts." />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐟</text></svg>" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0891b2" />
   <style>
     /* Landing-specific overrides */
     html { scroll-behavior: smooth; scroll-padding-top: 75px; }
@@ -339,6 +341,16 @@
     <a href="{{ url_for('auth.register') }}">Register</a>
   </div>
 </footer>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered', reg))
+        .catch(err => console.error('Service Worker registration failed', err));
+    });
+  }
+</script>
 
 </body>
 </html>
