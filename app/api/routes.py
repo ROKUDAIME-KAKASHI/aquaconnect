@@ -182,7 +182,6 @@ def api_create_transaction():
         return jsonify(tx.to_dict()), 201
     except (ValueError, TypeError):
         return jsonify({'error': 'Invalid data formats'}), 400
- Jonah
 
 
 # ── Forum ─────────────────────────────────────────────────────────────────────

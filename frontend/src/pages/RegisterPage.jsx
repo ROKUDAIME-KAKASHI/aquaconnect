@@ -173,4 +173,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
- Jonah

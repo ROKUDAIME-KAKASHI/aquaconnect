@@ -46,6 +46,8 @@ USERS = [
     dict(full_name="Priya Sharma",      email="priya.sharma@farm.com",  password="Farmer@123", role="farmer"),
     dict(full_name="Dr. Arjun Expert",  email="dr.expert@aqua.com",     password="Expert@123", role="expert"),
     dict(full_name="Ananya Das",        email="ananya.das@farm.com",    password="Farmer@123", role="farmer"),
+    dict(full_name="Vikram Singh",      email="vikram.s@aqua.com",      password="Expert@123", role="expert"),
+    dict(full_name="Sita Devi",         email="sita.farm@gmail.com",    password="Farmer@123", role="farmer"),
 ]
 
 # ─── FARMS ────────────────────────────────────────────────────────────────────
@@ -56,6 +58,8 @@ FARMS = [
          location="West Bengal",   area_hectares=1.8, fish_species="Catfish",  water_source="Borewell"),
     dict(owner="ananya.das@farm.com",   name="Ananya's Rohu Estate",
          location="Odisha",         area_hectares=5.0, fish_species="Rohu",    water_source="Canal"),
+    dict(owner="sita.farm@gmail.com",   name="Sita's Shrimp Colony",
+         location="Gujarat",        area_hectares=2.5, fish_species="Shrimp",  water_source="Sea Water"),
 ]
 
 # ─── WATER QUALITY readings per farm (ph, temp, do, ammonia, salinity, days_ago) ──
@@ -96,6 +100,16 @@ WATER_DATA = {
         (7.6, 29.0, 7.3, 0.01, 0.5, 18),
         (7.4, 29.5, 7.0, 0.02, 0.5, 22),
         (7.3, 30.0, 6.9, 0.02, 0.5, 26),
+    ],
+    "Sita's Shrimp Colony": [
+        (8.1, 28.0, 6.5, 0.01, 28.0, 0),
+        (8.2, 28.5, 6.2, 0.02, 28.5, 2),
+        (8.0, 29.0, 5.8, 0.04, 29.0, 5),   # warning (DO)
+        (7.9, 28.2, 6.6, 0.02, 28.0, 8),
+        (8.3, 27.5, 7.0, 0.01, 27.5, 12),
+        (7.5, 30.0, 4.2, 0.15, 30.0, 15),  # warning
+        (8.1, 28.3, 6.4, 0.02, 28.0, 20),
+        (8.0, 28.0, 6.5, 0.01, 28.0, 25),
     ],
 }
 
@@ -143,6 +157,14 @@ TRANSACTIONS = {
         dict(type="expense", amount=12000, category="Feed",          description="Rohu grower feed",                days=48),
         dict(type="expense", amount=8500,  category="Labour",        description="Workers wages – Feb",             days=65),
         dict(type="expense", amount=2500,  category="Water Quality", description="Water testing lab fees",          days=72),
+    ],
+    "Sita's Shrimp Colony": [
+        dict(type="income",  amount=120000, category="Fish Sales",    description="Export Grade Shrimp - 1 Ton",    days=10),
+        dict(type="income",  amount=45000,  category="Fish Sales",    description="Local wholesale batch",          days=40),
+        dict(type="expense", amount=25000, category="Feed",          description="Bio-active shrimp feed",         days=2),
+        dict(type="expense", amount=12000, category="Equipment",     description="Automatic paddle wheel aerator", days=15),
+        dict(type="expense", amount=5000,  category="Water Quality", description="Salt & Mineral additives",       days=20),
+        dict(type="expense", amount=8000,  category="Labour",        description="Monthly wages",                  days=30),
     ],
 }
 
@@ -238,6 +260,20 @@ POSTS = [
                  content="Great question! Under PMMSY 2025 Update: (1) Pond construction: 40% subsidy for general, 60% for SC/ST/women farmers. (2) Motorized boats & gear: 40% subsidy up to ₹1.5 lakh. (3) Recirculating Aquaculture Systems: 25% subsidy. For West Bengal, contact the Matsya Bhavan in Kolkata or visit the state fisheries website. Documents needed: Aadhaar, land records, bank account linked to Aadhaar, and a project report. Chief Minister's Matsya Prokolpo scheme adds additional state subsidies."),
             dict(author="ananya.das@farm.com", is_expert=False, days=3,
                  content="In Odisha the application process is fully online now through the Fisheries portal. I got 40% subsidy on my aerator purchase last year. The key is getting all paperwork right — especially the land measurement certificate from the Tehsildar office. Took me 3 months from application to disbursement."),
+        ]
+    ),
+    dict(
+        author="vikram.s@aqua.com",
+        title="Biofloc Technology: A beginner's guide to zero-water exchange",
+        category="Technology",
+        content="I've been successfully running a biofloc system for 18 months now. The ammonia is managed by beneficial bacteria, and water exchange is almost zero. It saves water and reduces feed costs, but it requires 24/7 power for aeration. Ask me anything!",
+        views=450,
+        days=30,
+        replies=[
+            dict(author="dr.expert@aqua.com", is_expert=True, days=28,
+                 content="Excellent overview Vikram! Biofloc is the future for land-constrained farmers. One tip: keep your C:N ratio at 15:1 for optimal microbial growth."),
+            dict(author="sita.farm@gmail.com", is_expert=False, days=25,
+                 content="Is biofloc suitable for shrimp farming? I'm worried about the floc settling on the bottom and causing infections."),
         ]
     ),
 ]
