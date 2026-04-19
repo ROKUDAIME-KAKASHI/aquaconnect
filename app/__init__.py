@@ -39,12 +39,37 @@ def create_app():
     app.wsgi_app = WhiteNoise(app.wsgi_app, root='app/static/', prefix='static/')
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+    # ── Security & Extensions ──────────────────────────────────────────────
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
     limiter.init_app(app)
-    CORS(app)
+    
+    # Restrict CORS for Production & Capacitor
+    CORS(app, resources={r"/api/*": {
+        "origins": [
+            "https://aquaconnect-self.vercel.app", 
+            "capacitor://localhost", 
+            "http://localhost"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }})
+
+    # Apply Rate Limiting to the API Blueprint
+    from app.api.routes import api_bp
+    limiter.limit("100 per hour")(api_bp)
+    limiter.limit("10 per minute", methods=["POST"])(api_bp) # Stricter for mutations
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:;"
+        return response
 
     from flask import request, session
 
