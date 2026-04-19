@@ -39,6 +39,23 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 lg:p-8">
+      {/* Language Switcher Overlay */}
+      <div className="fixed top-4 right-4 z-[1000]">
+        <select 
+          onChange={(e) => window.location.href = `/set_language/${e.target.value}`}
+          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg px-3 py-1.5 text-sm cursor-pointer backdrop-blur-md outline-none transition-all"
+          translate="no"
+        >
+          <option value="en" className="bg-slate-900">English</option>
+          <option value="hi" className="bg-slate-900">हिन्दी (Hindi)</option>
+          <option value="te" className="bg-slate-900">తెలుగు (Telugu)</option>
+          <option value="ta" className="bg-slate-900">தமிழ் (Tamil)</option>
+          <option value="bn" className="bg-slate-900">বাংলা (Bengali)</option>
+          <option value="ml" className="bg-slate-900">മലയാളം (Malayalam)</option>
+          <option value="kn" className="bg-slate-900">ಕನ್ನಡ (Kannada)</option>
+        </select>
+      </div>
+
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         
         {/* Left Side: Promo Content */}

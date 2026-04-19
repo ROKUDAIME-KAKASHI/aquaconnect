@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login | AquaConnect</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    .lang-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
+    .language-selector { padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); background: white; color: #333; font-size: 0.85rem; font-weight: 500; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    /* Prevent Google Translate shifts */
+    .goog-te-banner-frame { display: none !important; }
+    .skiptranslate iframe { display: none !important; }
+    body { top: 0px !important; }
+  </style>
 </head>
 <body>
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -16,6 +24,18 @@
   </div>
   {% endif %}
 {% endwith %}
+
+<div class="lang-container">
+  <select onchange="window.location.href='/set_language/'+this.value" class="language-selector notranslate" translate="no">
+    <option value="en" {% if session.get('language') == 'en' %}selected{% endif %}>English</option>
+    <option value="hi" {% if session.get('language') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+    <option value="te" {% if session.get('language') == 'te' %}selected{% endif %}>తెలుగు (Telugu)</option>
+    <option value="ta" {% if session.get('language') == 'ta' %}selected{% endif %}>தமிழ் (Tamil)</option>
+    <option value="bn" {% if session.get('language') == 'bn' %}selected{% endif %}>বাংলা (Bengali)</option>
+    <option value="ml" {% if session.get('language') == 'ml' %}selected{% endif %}>മലയാളം (Malayalam)</option>
+    <option value="kn" {% if session.get('language') == 'kn' %}selected{% endif %}>ಕನ್ನಡ (Kannada)</option>
+  </select>
+</div>
 
 <div class="auth-page">
   <div class="auth-left">
@@ -77,5 +97,15 @@
 <script>
   setTimeout(() => { const c = document.querySelector('.flash-container'); if(c) c.remove(); }, 4000);
 </script>
+
+<!-- Google Translate Integration -->
+<div id="google_translate_element" style="display:none;"></div>
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 </body>
 </html>

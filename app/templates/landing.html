@@ -135,9 +135,26 @@
       .cta-box { padding: 40px 24px; }
       .cta-box h2 { font-size: 1.8rem; }
     }
+    .lang-container { position: fixed; top: 12px; right: 280px; z-index: 2000; }
+    .language-selector { padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(5,30,48,0.6); color: white; font-size: 0.85rem; font-weight: 500; cursor: pointer; backdrop-filter: blur(8px); }
+    .language-selector option { background: #051e30; color: white; }
+    @media (max-width: 900px) { .lang-container { right: 20px; top: 80px; } }
   </style>
 </head>
 <body>
+
+<!-- Language Switcher -->
+<div class="lang-container">
+  <select onchange="window.location.href='/set_language/'+this.value" class="language-selector notranslate" translate="no">
+    <option value="en" {% if session.get('language') == 'en' %}selected{% endif %}>English</option>
+    <option value="hi" {% if session.get('language') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+    <option value="te" {% if session.get('language') == 'te' %}selected{% endif %}>తెలుగు (Telugu)</option>
+    <option value="ta" {% if session.get('language') == 'ta' %}selected{% endif %}>தமிழ் (Tamil)</option>
+    <option value="bn" {% if session.get('language') == 'bn' %}selected{% endif %}>বাংলা (Bengali)</option>
+    <option value="ml" {% if session.get('language') == 'ml' %}selected{% endif %}>മലയാളം (Malayalam)</option>
+    <option value="kn" {% if session.get('language') == 'kn' %}selected{% endif %}>ಕನ್ನಡ (Kannada)</option>
+  </select>
+</div>
 
 <!-- Navbar -->
 <nav class="land-nav">
@@ -351,6 +368,15 @@
     });
   }
 </script>
+
+<!-- Google Translate Integration -->
+<div id="google_translate_element" style="display:none;"></div>
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 </html>
