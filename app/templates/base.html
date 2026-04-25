@@ -59,6 +59,9 @@
       </a>
 
       <div class="nav-section-label" style="margin-top:16px;">Monitoring</div>
+      <a href="https://aquaculture-io-t.vercel.app/" target="_blank" class="nav-item">
+        <span class="icon">📡</span> Live Monitor <span style="font-size: 0.7rem; background: var(--accent); color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">LIVE</span>
+      </a>
       <a href="{{ url_for('water_quality.alerts') }}" class="nav-item {% if request.endpoint == 'water_quality.alerts' %}active{% endif %}">
         <span class="icon">🔔</span> Water Alerts
       </a>
