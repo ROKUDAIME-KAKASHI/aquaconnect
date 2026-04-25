@@ -24,17 +24,15 @@
   <div class="stat-card teal">
     <div class="stat-icon teal">🌊</div>
     <div class="stat-label">Water Status</div>
-    <div class="stat-value teal">
+    <div id="live-temp" class="stat-value teal">
       {% if latest_log %}
         {{ latest_log.health_status | title }}
       {% else %}No Data{% endif %}
     </div>
-    {% if latest_log %}
     <div class="stat-trend">
-      <span class="status-dot {{ latest_log.health_status }}"></span>
-      Last reading just now
+      <span id="live-status-dot" class="status-dot {{ latest_log.health_status if latest_log else 'offline' }}"></span>
+      <span id="live-update-time">Last reading just now</span>
     </div>
-    {% endif %}
   </div>
 
   <div class="stat-card green">
@@ -54,8 +52,8 @@
   <div class="stat-card red">
     <div class="stat-icon red">📡</div>
     <div class="stat-label">IoT Sensors</div>
-    <div class="stat-value red">Ready</div>
-    <div class="stat-trend">Integration available</div>
+    <div id="live-iot-status" class="stat-value red">Ready</div>
+    <div id="live-turbidity" class="stat-trend">Integration available</div>
   </div>
 </div>
 
@@ -154,5 +152,56 @@
     </div>
   </div>
 </div>
+
+<script>
+  async function updateLiveData() {
+    try {
+      const response = await fetch('https://aquaconnect.onrender.com/data');
+      const data = await response.json();
+      
+      if (data) {
+        // Update Temperature
+        const tempElement = document.getElementById('live-temp');
+        if (tempElement) {
+          tempElement.innerHTML = `${data.temperature}°<span style="font-size:1rem">C</span>`;
+        }
+        
+        // Update IoT Status
+        const iotStatus = document.getElementById('live-iot-status');
+        if (iotStatus) {
+          iotStatus.innerHTML = 'Active';
+          iotStatus.classList.add('pulse');
+        }
+        
+        // Update Turbidity
+        const turbidityElement = document.getElementById('live-turbidity');
+        if (turbidityElement) {
+          turbidityElement.innerHTML = `💧 Turbidity: ${data.turbidity} NTU`;
+        }
+        
+        // Update Status Dot and Time
+        const statusDot = document.getElementById('live-status-dot');
+        if (statusDot) {
+          statusDot.className = 'status-dot good';
+        }
+        
+        const updateTime = document.getElementById('live-update-time');
+        if (updateTime) {
+          updateTime.innerHTML = 'Live feed active';
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch live data:', error);
+      const iotStatus = document.getElementById('live-iot-status');
+      if (iotStatus) {
+        iotStatus.innerHTML = 'Offline';
+      }
+    }
+  }
+
+  // Poll every 3 seconds
+  setInterval(updateLiveData, 3000);
+  updateLiveData(); // Initial call
+</script>
 {% endif %}
 {% endblock %}
